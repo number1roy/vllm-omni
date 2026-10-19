@@ -37,6 +37,7 @@ from .chunked_decode import decode_h3_chunks
 from .ops import install_h3_vae_optimizations
 from .packed_tokens import minimax_h3_patchify_video_latent
 from .vae_temporal import install_temporal_stream_patches
+from .vae_tiling import TileBatchExecutor
 
 MINIMAX_H3_KEYFRAME_ENCODE_SEED = 42
 MINIMAX_H3_AUDIO_SAMPLE_RATE = 32000
@@ -403,6 +404,7 @@ class MiniMaxH3VideoVAE(nn.Module, DistributedVaeMixin):
         self._tile_gather_workspace: torch.Tensor | None = None
         self._tile_gather_stats = {"hits": 0, "allocs": 0, "workspace_bytes": 0}
         self._checkpoint_tile_gather = None
+        self._tile_batch_executor: TileBatchExecutor | None = None
         if self._tile_gather_reuse_enabled():
             self._install_persistent_tile_gather()
 
@@ -533,6 +535,31 @@ class MiniMaxH3VideoVAE(nn.Module, DistributedVaeMixin):
             tp_rank=0,
         )
         self.model.parallel_tiling = enabled
+
+    def set_tile_batch_size(self, batch_size: int) -> None:
+        """Bound the number of decoder spatial tiles in each rank-local forward."""
+        if type(batch_size) is not int or batch_size < 1:
+            raise ValueError("vae_tile_batch_size must be a positive integer")
+        if self.encode_only:
+            return
+        if self._tile_batch_executor is not None:
+            raise RuntimeError("VAE tile batch executor has already been configured")
+        if batch_size == 1:
+            return
+        if not self.use_tiling or not self.model.decoder_tiling:
+            raise ValueError("vae_tile_batch_size > 1 requires decoder VAE tiling")
+        cpu_group = None
+        if self.parallel_size > 1:
+            world = get_world_group()
+            cpu_group = world.cpu_group
+            device_group = self._native_parallel_state()["sp_process_group"]
+            if dist.get_backend(cpu_group) != "gloo" or dist.get_process_group_ranks(
+                cpu_group
+            ) != dist.get_process_group_ranks(device_group):
+                raise ValueError("VAE tile batching requires a matching Gloo CPU control group")
+        self._tile_batch_executor = TileBatchExecutor(self.model, batch_size, cpu_group)
+        self.model._run_tile_tasks = self._tile_batch_executor.run
+        logger.info("MiniMax H3 decoder vae_tile_batch_size=%d per rank; tail batches are unpadded", batch_size)
 
     def _native_parallel_state(self) -> dict[str, Any]:
         """Return the checkpoint's own mutable parallel-state dict."""

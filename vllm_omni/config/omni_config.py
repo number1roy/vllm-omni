@@ -873,6 +873,7 @@ class _DiffusionConfigProjection(_TrackExplicitConfigFields):
     fa_deterministic: bool = False
     vae_use_slicing: bool = False
     vae_use_tiling: bool = False
+    vae_tile_batch_size: int = Field(default=1, ge=1, strict=True)
     vae_fast_path: Literal["off", "lossless", "channels_last"] = "lossless"
     vae_encode_fast_path: Literal["off", "lossless", "channels_last"] = "lossless"
     mask_strategy_file_path: str | None = None

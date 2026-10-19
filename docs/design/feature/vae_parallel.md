@@ -1,5 +1,26 @@
 # VAE Patch Parallelism
 
+For MiniMax H3, `--vae-tile-batch-size K` additionally bounds the number of
+decoder spatial tiles processed by each rank in one forward when K > 1.
+The default K=1 keeps the checkpoint's original executor without adding control
+collectives. K must be a positive integer and K greater than 1 requires VAE
+tiling. This option changes local decoder scheduling, independently of the
+number of VAE ranks. Encoder scheduling remains unchanged. Other VAE adapters
+reject K greater than 1 unless they implement this capability.
+
+At 1344×768, the default H3 geometry has 28 tiles. With eight VAE ranks,
+ranks 0–3 have four tiles each and ranks 4–7 have three. At K=4 these ranks
+execute one forward with four or three tiles respectively; the tail is never
+padded. An original sample batch B becomes q×B for a group of q tiles, and
+outputs are split back into B-sized tiles before the existing gather and blend.
+At K=3, ranks may execute different numbers of local forwards. A matching
+Gloo CPU group coordinates local failures before the checkpoint device gather;
+the control barrier has a 120-second timeout. A worker process exit remains
+covered by the executor's worker monitor. A rank-group execution or control
+failure terminates the dedicated worker so this monitor closes the stage.
+Increasing K can increase memory use;
+it does not guarantee a speedup.
+
 This document describes how to add **VAE Patch Parallelism** support to a diffusion model.
 We use **Qwen-Image** as the reference implementation for decode parallel, and **Wan2.2** for encode parallel.
 
