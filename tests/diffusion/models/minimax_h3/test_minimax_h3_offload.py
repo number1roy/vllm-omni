@@ -636,3 +636,44 @@ def test_requested_model_offload_without_backend_uses_resident_components():
     assert actual is expected
     pipeline.text_encoder.load_to_device.assert_called_once_with()
     pipeline.text_encoder.encode_ids.assert_called_once()
+
+
+@pytest.mark.parametrize("resident", [False, True])
+@pytest.mark.parametrize("name", ["video_vae", "encoder_component", "decoder_component", "audio_vae", "text_encoder"])
+@pytest.mark.parametrize("fails", [False, True])
+def test_dlo_vae_residency_context(resident, name, fails):
+    from vllm_omni.diffusion.data import OmniDiffusionConfig
+    from vllm_omni.diffusion.models.minimax_h3 import MiniMaxH3Pipeline
+    from vllm_omni.diffusion.models.minimax_h3.vae import _VideoVAEPartProxy
+
+    pipeline = object.__new__(MiniMaxH3Pipeline)
+    torch.nn.Module.__init__(pipeline)
+    pipeline.od_config = OmniDiffusionConfig(enable_distributed_layerwise_offload=True, dlo_vae_resident=resident)
+    for module_name in ("video_vae", "audio_vae", "text_encoder"):
+        module = torch.nn.Module()
+        module.load_to_device = Mock()
+        module.offload_to_cpu = Mock()
+        setattr(pipeline, module_name, module)
+    for part in ("encoder", "decoder"):
+        proxy = _VideoVAEPartProxy(pipeline.video_vae, part)
+        proxy.load_to_device = Mock()
+        proxy.offload_to_cpu = Mock()
+        setattr(pipeline.video_vae, f"{part}_component", proxy)
+    component = getattr(pipeline.video_vae, name) if name.endswith("_component") else getattr(pipeline, name)
+    should_stage = not resident or name == "text_encoder"
+
+    for _ in range(2):
+        with pytest.raises(RuntimeError, match="decode failed") if fails else nullcontext():
+            with pipeline._component_on_device(component):
+                if fails:
+                    raise RuntimeError("decode failed")
+    assert component.load_to_device.call_count == 2 * should_stage
+    assert component.offload_to_cpu.call_count == 2 * should_stage
+
+
+def test_dlo_vae_residency_requires_dlo():
+    from vllm_omni.diffusion.data import OmniDiffusionConfig
+    from vllm_omni.diffusion.models.minimax_h3 import MiniMaxH3Pipeline
+
+    with pytest.raises(ValueError, match="requires distributed layerwise offload"):
+        MiniMaxH3Pipeline(od_config=OmniDiffusionConfig(dlo_vae_resident=True))

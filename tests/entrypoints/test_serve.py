@@ -112,6 +112,19 @@ def _parse_serve_args(argv: list[str]) -> TrackingNamespace:
 
 
 @pytest.mark.parametrize(
+    "flags,expected", [([], False), (["--dlo-vae-resident"], True), (["--no-dlo-vae-resident"], False)]
+)
+def test_serve_parser_tracks_explicit_dlo_vae_resident(flags: list[str], expected: bool) -> None:
+    args = _parse_serve_args(["serve", "fake-model", "--omni", *flags])
+    assert args.dlo_vae_resident is expected
+    explicit = args.get_explicit_kwargs_dict()
+    if flags:
+        assert explicit["dlo_vae_resident"] is expected
+    else:
+        assert "dlo_vae_resident" not in explicit
+
+
+@pytest.mark.parametrize(
     "flags",
     [
         [],
