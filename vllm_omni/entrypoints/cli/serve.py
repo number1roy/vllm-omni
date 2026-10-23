@@ -897,6 +897,22 @@ class OmniServeCommand(CLISubcommand):
             help="Enable VAE tiling for memory optimization (useful for mitigating OOM issues).",
         )
         omni_config_group.add_argument(
+            "--vae-tile-size",
+            type=int,
+            default=None,
+            help="Spatial tile edge length in pixels for MiniMax H3 video VAE encoding and decoding. "
+            "Must be positive, divisible by the VAE spatial compression ratio, and larger than both minimum overlaps. "
+            "Unset preserves checkpoint defaults; does not enable VAE tiling.",
+        )
+        omni_config_group.add_argument(
+            "--vae-tile-overlap",
+            type=int,
+            default=None,
+            help="Minimum spatial tile overlap in pixels for MiniMax H3 video VAE encoding and decoding. "
+            "Must be nonnegative, divisible by the VAE spatial compression ratio, and smaller than both tile sizes. "
+            "Unset preserves checkpoint defaults; does not enable VAE tiling.",
+        )
+        omni_config_group.add_argument(
             "--vae-tile-batch-size",
             type=_positive_tile_batch_size,
             default=None,
