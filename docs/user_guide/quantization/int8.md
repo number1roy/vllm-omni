@@ -172,3 +172,42 @@ encode-only quantization, and replacement NVFP4 decoders are rejected. This
 includes automatically detected `vae_decoder_nvfp4` assets; set
 `additional_config.video_vae_decoder` to `null` to use the native decoder
 instead. This minimal path does not add HWR-required or HSDP support.
+
+### Combine native VAE INT8 with Omni operators (experimental)
+
+Set `MINIMAX_H3_VAE_USE_OMNI_OPS=1` before starting the process to enable
+the native H3 decoder's Omni RMSNorm and RoPE adapters alongside INT8:
+
+```bash
+MINIMAX_H3_VAE_USE_OMNI_OPS=1 \
+vllm serve /path/to/MiniMax-H3/FL2VA --omni --trust-remote-code \
+  --diffusion-quantization-config '{"transformer":null,"video_vae":{"method":"int8","activation_scheme":"dynamic","is_checkpoint_int8_serialized":false},"text_encoder":null,"audio_vae":null,"default":null}'
+```
+
+The switch defaults to off. Values `1`, `true`, `yes`, and `on` enable it;
+matching ignores case and surrounding whitespace. Recreate the VAE or restart
+the serving process after changing it. It can also be enabled without INT8
+for separate operator validation and performance comparisons.
+
+Installation requires a native decoder, an NPU target, and the Ascend NPU
+platform. CPU-stored weights during initialization or offload do not prevent
+installation. Encode-only VAEs, missing decoders, replacement NVFP4 decoders,
+and non-NPU targets/platforms skip this adapter with a reason in startup logs.
+The existing INT8 configuration restrictions still apply.
+
+Affine RMSNorm uses the Omni NPU implementation backed by
+`torch_npu.npu_rms_norm`. RoPE uses the MindIE kernel only when it is available
+and the actual input is on NPU within the initial batch-size-one scope;
+otherwise it uses the H3 native calculation while preserving the batch
+dimension. A missing MindIE RoPE kernel does not
+disable INT8. This path does not fuse Q/K normalization with RoPE; the native
+non-affine Q/K norms remain unchanged. A selected kernel's runtime failure is
+reported rather than silently switching implementations.
+
+Norm and Attention replacements occur after FP32 weight loading and before
+online INT8 conversion, device-only placement, temporal patching, and residency
+snapshots. Startup logs report adapter installation counts; RoPE dispatch logs
+identify its backend and selection reason. CPU tests cover the switch, initialization order,
+Attention/RoPE contracts, and mixed parameter residency. Combined NPU operator
+accuracy, video quality, memory, and latency gains still require A2/A3
+validation; CPU test results do not establish those gains.
