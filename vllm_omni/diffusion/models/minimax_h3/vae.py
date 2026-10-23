@@ -536,6 +536,47 @@ class MiniMaxH3VideoVAE(nn.Module, DistributedVaeMixin):
         )
         self.model.parallel_tiling = enabled
 
+    def set_tiling_config(self, *, tile_size: int | None = None, tile_overlap: int | None = None) -> None:
+        """Validate spatial overrides together before changing either VAE grid."""
+        if tile_size is None and tile_overlap is None:
+            return
+        if tile_size is not None and (type(tile_size) is not int or tile_size <= 0):
+            raise ValueError("vae_tile_size must be a positive integer")
+        if tile_overlap is not None and (type(tile_overlap) is not int or tile_overlap < 0):
+            raise ValueError("vae_tile_overlap must be a nonnegative integer")
+        model = self.model
+        ratio = int(model.vae_ratio)
+        if ratio <= 0:
+            raise ValueError("VAE spatial compression ratio must be positive")
+        if tile_size is not None and tile_size % ratio != 0:
+            raise ValueError(f"vae_tile_size must be divisible by the VAE spatial compression ratio ({ratio})")
+        if tile_overlap is not None and tile_overlap % ratio != 0:
+            raise ValueError(f"vae_tile_overlap must be divisible by the VAE spatial compression ratio ({ratio})")
+
+        encoder_size = model.tile_size if tile_size is None else tile_size
+        decoder_size = model.decoder_tile_size if tile_size is None else tile_size
+        encoder_overlap = model.tile_overlap_min if tile_overlap is None else tile_overlap
+        decoder_overlap = model.decoder_tile_overlap_min if tile_overlap is None else tile_overlap
+        if encoder_size <= encoder_overlap or decoder_size <= decoder_overlap:
+            raise ValueError("vae_tile_size must exceed vae_tile_overlap on both encoder and decoder grids")
+
+        # The checkpoint copies tile_size to decoder_tile_size only at init.
+        if tile_size is not None:
+            model.tile_size = tile_size
+            model.decoder_tile_size = tile_size
+        if tile_overlap is not None:
+            model.tile_overlap_min = tile_overlap
+            model.decoder_tile_overlap_min = tile_overlap
+        logger.info(
+            "MiniMax H3 VAE tile sizes: encoder=%d, decoder=%d pixels; "
+            "minimum overlaps: encoder=%d, decoder=%d; spatial ratio=%d",
+            model.tile_size,
+            model.decoder_tile_size,
+            model.tile_overlap_min,
+            model.decoder_tile_overlap_min,
+            ratio,
+        )
+
     def set_tile_batch_size(self, batch_size: int) -> None:
         """Bound the number of decoder spatial tiles in each rank-local forward."""
         if type(batch_size) is not int or batch_size < 1:
