@@ -857,6 +857,7 @@ class _DiffusionConfigProjection(_TrackExplicitConfigFields):
     enable_cpu_offload: bool = False
     enable_layerwise_offload: bool = False
     enable_distributed_layerwise_offload: bool = False
+    dlo_vae_resident: bool = Field(default=False, strict=True)
     dlo_use_allgather: bool = True
     dlo_resident_layers: int = Field(default=0, ge=0)
     host_weight_runtime_mode: Literal["disabled", "preferred", "required"] = "disabled"

@@ -129,6 +129,10 @@ def build_stage_runtime_overrides(
     if tile_batch_override is not None and "vae_tile_batch_size" not in internal_keys:
         result["vae_tile_batch_size"] = tile_batch_override
 
+    vae_resident_override = cli_overrides.get(f"stage_{stage_id}_dlo_vae_resident")
+    if vae_resident_override is not None and "dlo_vae_resident" not in internal_keys:
+        result["dlo_vae_resident"] = vae_resident_override
+
     return result
 
 
@@ -656,6 +660,7 @@ class StageDeployConfig:
     enable_layerwise_offload: bool | None = None
 
     enable_distributed_layerwise_offload: bool | None = None
+    dlo_vae_resident: bool | None = None
     dlo_use_allgather: bool | None = None
     dlo_resident_layers: int | None = None
     host_weight_runtime_mode: str | None = None
@@ -674,6 +679,8 @@ class StageDeployConfig:
 
     def __post_init__(self) -> None:
         _normalize_stage_backend_fields(self)
+        if self.dlo_vae_resident is not None and type(self.dlo_vae_resident) is not bool:
+            raise ValueError("dlo_vae_resident must be a boolean")
         if self.vae_tile_batch_size is not None and (
             type(self.vae_tile_batch_size) is not int or self.vae_tile_batch_size < 1
         ):

@@ -102,6 +102,27 @@ omni = Omni(
 
 ## Flags
 
+For MiniMax H3, add `--dlo-vae-resident` to a launch using
+`--enable-distributed-layerwise-offload` to keep all loaded Video VAE encode,
+Video VAE decode, and Audio VAE weights on the device throughout inference.
+This avoids repeated VAE weight transfers while preserving DiT and text-encoder
+offload behavior. It does not load omitted VAE components or change tile batching.
+The default is off; `--no-dlo-vae-resident` explicitly disables it.
+
+For a diffusion stage in a deploy YAML, use:
+
+```yaml
+stages:
+  - stage_id: 1  # Use the ID of your MiniMax H3 diffusion stage.
+    enable_distributed_layerwise_offload: true
+    dlo_vae_resident: true
+```
+
+The flag requires an effective distributed layerwise strategy in MiniMax H3.
+Each rank must have enough memory for its loaded VAEs alongside the active
+text-encoder or DiT weights, DLO buffers, activations, and workspaces. Insufficient
+memory fails normally; it does not silently fall back to on-demand VAE loading.
+
 | Setting | Meaning | Default |
 | --- | --- | --- |
 | `diffusion_offload_config.mode` | `module` or `layer` granularity | required |
