@@ -909,6 +909,14 @@ class MiniMaxH3Pipeline(
             resolve_offload_strategy(od_config) is not OffloadStrategy.DISTRIBUTED_LAYER_WISE
         ):
             raise ValueError("MiniMax H3 dlo_vae_resident requires distributed layerwise offload")
+        if getattr(od_config, "dlo_text_encoder_resident", False):
+            offload = resolve_offload(od_config)
+            if offload.strategy is not OffloadStrategy.DISTRIBUTED_LAYER_WISE:
+                raise ValueError("MiniMax H3 dlo_text_encoder_resident requires distributed layerwise offload")
+            if offload.public is not None and offload.offloads(TEXT_ENCODER_COMPONENT):
+                raise ValueError(
+                    "dlo_text_encoder_resident conflicts with diffusion_offload_config selecting text_encoder"
+                )
         self.parallel_config = od_config.parallel_config
         if int(self.parallel_config.cfg_parallel_size) != 1:
             raise ValueError("MiniMax-H3 is CFG-distilled and has no negative branch; cfg_parallel_size must be 1")
@@ -927,11 +935,12 @@ class MiniMaxH3Pipeline(
             )
         self._encoder_modules = ["text_encoder"] if self.load_text_encoder else []
         self._PROFILER_TARGETS = list(type(self)._PROFILER_TARGETS)
+        # Residency must disable both block hooks and whole-component staging.
         encoder_block_attrs = dict(self._offload_plan.encoder_block_attrs)
-        if not self.load_text_encoder:
+        if not self.load_text_encoder or od_config.dlo_text_encoder_resident:
             encoder_block_attrs.pop("text_encoder", None)
         on_demand_component_paths = set(self._offload_plan.on_demand_component_paths)
-        if not self.load_text_encoder:
+        if not self.load_text_encoder or od_config.dlo_text_encoder_resident:
             on_demand_component_paths.discard("text_encoder")
         if od_config.dlo_vae_resident:
             on_demand_component_paths.difference_update(("video_vae", "audio_vae"))
@@ -1614,6 +1623,8 @@ class MiniMaxH3Pipeline(
     def _uses_manual_component_offload(self, component: nn.Module) -> bool:
         od_config = getattr(self, "od_config", None)
         if od_config is None:
+            return False
+        if getattr(od_config, "dlo_text_encoder_resident", False) and component is getattr(self, "text_encoder", None):
             return False
         if getattr(od_config, "dlo_vae_resident", False):
             video_vae = getattr(self, "video_vae", None)

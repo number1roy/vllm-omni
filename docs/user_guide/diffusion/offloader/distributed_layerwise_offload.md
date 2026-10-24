@@ -109,6 +109,16 @@ This avoids repeated VAE weight transfers while preserving DiT and text-encoder
 offload behavior. It does not load omitted VAE components or change tile batching.
 The default is off; `--no-dlo-vae-resident` explicitly disables it.
 
+Independently, `--dlo-text-encoder-resident` keeps the loaded MiniMax H3 Qwen3-VL
+text encoder, including its vision module, resident throughout inference.
+It disables both encoder block streaming and whole-component staging while
+preserving DiT offload and the VAE setting. It defaults to off and supports
+`--no-dlo-text-encoder-resident` for explicit disabling. Only the existing encoder
+TP ranks hold weights; unloaded encoder components and parameter-free ranks
+remain unloaded. With an explicit `diffusion_offload_config`, selecting
+`text_encoder` for offload conflicts with this flag and raises an error; omit
+`text_encoder` from `components` when requesting residency.
+
 For a diffusion stage in a deploy YAML, use:
 
 ```yaml
@@ -116,12 +126,14 @@ stages:
   - stage_id: 1  # Use the ID of your MiniMax H3 diffusion stage.
     enable_distributed_layerwise_offload: true
     dlo_vae_resident: true
+    dlo_text_encoder_resident: true
 ```
 
-The flag requires an effective distributed layerwise strategy in MiniMax H3.
-Each rank must have enough memory for its loaded VAEs alongside the active
-text-encoder or DiT weights, DLO buffers, activations, and workspaces. Insufficient
-memory fails normally; it does not silently fall back to on-demand VAE loading.
+Both flags require an effective distributed layerwise strategy in MiniMax H3.
+Each rank must have enough memory for its resident VAE and encoder weights
+alongside active offloaded components, DLO buffers, activations, and workspaces.
+Encoder residency can also increase startup memory peaks. Insufficient memory
+fails normally; it does not silently fall back to on-demand loading.
 
 | Setting | Meaning | Default |
 | --- | --- | --- |
