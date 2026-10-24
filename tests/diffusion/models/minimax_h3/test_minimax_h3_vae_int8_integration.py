@@ -4,7 +4,6 @@
 
 from contextlib import nullcontext
 from types import FunctionType, MethodType, SimpleNamespace
-from unittest.mock import Mock
 
 import pytest
 import torch
@@ -43,7 +42,7 @@ class _Remote(nn.Module):
         return super().to(*args, **kwargs)
 
 
-def _native_transformer_block():
+def _native_transformer_block(mocker):
     """Small remote structure for exercising the real adapter installation."""
 
     def forward(self, hidden_states, rotary_pos_emb=None, pack_info=None):
@@ -62,13 +61,13 @@ def _native_transformer_block():
     block.attn.perform_attention = nn.Identity()
     # Model the checkpoint's module-local Python helpers without modifying
     # this test module's globals. No forward/operator is executed here.
-    namespace = {name: Mock() for name in ("all_to_all_4D", "get_parallel_state", "_vit_norm_input")}
+    namespace = {name: mocker.Mock() for name in ("all_to_all_4D", "get_parallel_state", "_vit_norm_input")}
     block.attn.forward = MethodType(FunctionType(forward.__code__, namespace), block.attn)
     return block
 
 
 @pytest.fixture
-def quantized_vae(monkeypatch):
+def quantized_vae(monkeypatch, mocker):
     monkeypatch.delenv("MINIMAX_H3_VAE_USE_OMNI_OPS", raising=False)
     events: list[tuple[str, object]] = []
     remote = _Remote(events)
@@ -84,10 +83,10 @@ def quantized_vae(monkeypatch):
         },
     )
     monkeypatch.setattr(vae_module, "_load_remote_component", lambda *args, **kwargs: remote)
-    monkeypatch.setattr(vae_module, "install_temporal_stream_patches", Mock())
-    validation = Mock()
+    monkeypatch.setattr(vae_module, "install_temporal_stream_patches", mocker.Mock())
+    validation = mocker.Mock()
     monkeypatch.setattr(vae_int8, "validate_h3_video_vae_quant_config", validation)
-    optimization = Mock()
+    optimization = mocker.Mock()
     monkeypatch.setattr(vae_module, "install_h3_vae_optimizations", optimization)
 
     def install(decoder, config, **kwargs):
@@ -111,7 +110,7 @@ def quantized_vae(monkeypatch):
             assert modules[-1][0].weight_scale.dtype == torch.float32
         assert events[-1][0] in ("place", "snapshot")
         events.append(("snapshot", None))
-        return Mock()
+        return mocker.Mock()
 
     monkeypatch.setattr(vae_int8, "install_h3_video_vae_int8", install)
     monkeypatch.setattr(vae_module, "PinnedModuleStager", stager)
@@ -143,7 +142,7 @@ def test_quantization_precedes_residency_snapshot(quantized_vae):
     assert vae.model.decoder[0].weight.dtype == torch.int8
 
 
-def test_keyframe_encode_does_not_recast_quantized_decoder(quantized_vae, monkeypatch):
+def test_keyframe_encode_does_not_recast_quantized_decoder(quantized_vae, monkeypatch, mocker):
     from PIL import Image
 
     vae, _ = quantized_vae
@@ -151,7 +150,7 @@ def test_keyframe_encode_does_not_recast_quantized_decoder(quantized_vae, monkey
     vae.model.encode_images = lambda image, **kwargs: [torch.ones(1, 1, 2, 2)]
     # The reference first parameter must stay FP32; otherwise encode_image's
     # whole-adapter dtype conversion would recast the decoder scales/biases.
-    monkeypatch.setattr(vae, "to", Mock(side_effect=AssertionError("whole VAE dtype cast")))
+    monkeypatch.setattr(vae, "to", mocker.Mock(side_effect=AssertionError("whole VAE dtype cast")))
     monkeypatch.setattr(vae, "_encoder_tiling_context", lambda *args: nullcontext())
     monkeypatch.setattr(vae_module, "_minimax_h3_keyframe_encode_context", lambda *args: nullcontext())
     torch.testing.assert_close(vae.encode_image(Image.new("RGB", (2, 2))), torch.ones(1, 4))
@@ -159,9 +158,9 @@ def test_keyframe_encode_does_not_recast_quantized_decoder(quantized_vae, monkey
     assert vae.model.decoder[0].weight_scale.dtype == torch.float32
 
 
-def test_invalid_quantization_rejected_before_nvfp4_resolution_or_weight_load(monkeypatch):
-    resolver = Mock(side_effect=AssertionError("should validate first"))
-    loader = Mock(side_effect=AssertionError("should validate first"))
+def test_invalid_quantization_rejected_before_nvfp4_resolution_or_weight_load(monkeypatch, mocker):
+    resolver = mocker.Mock(side_effect=AssertionError("should validate first"))
+    loader = mocker.Mock(side_effect=AssertionError("should validate first"))
     monkeypatch.setattr(vae_nvfp4, "resolve_video_decoder_checkpoint", resolver)
     monkeypatch.setattr(vae_module, "_load_remote_component", loader)
     # A CPU target cannot enable this NPU-only path. The actual validator runs.
@@ -187,7 +186,7 @@ def test_mixed_int8_fp32_parameters_survive_residency_cycle():
 
 
 @pytest.fixture
-def omni_vae_factory(monkeypatch):
+def omni_vae_factory(monkeypatch, mocker):
     """Use the real constructor with CPU storage and fake hardware boundaries."""
 
     from vllm_omni.diffusion.models.minimax_h3 import vae_ops
@@ -214,7 +213,7 @@ def omni_vae_factory(monkeypatch):
         target = SimpleNamespace(type=target_type)
         events: list[tuple[str, object]] = []
         remote = _Remote(events)
-        remote.model.decoder.transformer_blocks = nn.ModuleList([_native_transformer_block()])
+        remote.model.decoder.transformer_blocks = nn.ModuleList([_native_transformer_block(mocker)])
         if encode_only or missing_decoder:
             del remote.model.decoder
             del remote.model.post_quant_conv
@@ -230,11 +229,11 @@ def omni_vae_factory(monkeypatch):
         monkeypatch.setattr(
             vae_nvfp4,
             "resolve_video_decoder_checkpoint",
-            Mock(return_value="replacement.safetensors" if replacement_decoder else None),
+            mocker.Mock(return_value="replacement.safetensors" if replacement_decoder else None),
         )
-        monkeypatch.setattr(vae_nvfp4, "install_nvfp4_video_decoder", Mock())
-        monkeypatch.setattr(vae_int8, "validate_h3_video_vae_quant_config", Mock())
-        optimization = Mock()
+        monkeypatch.setattr(vae_nvfp4, "install_nvfp4_video_decoder", mocker.Mock())
+        monkeypatch.setattr(vae_int8, "validate_h3_video_vae_quant_config", mocker.Mock())
+        optimization = mocker.Mock()
         monkeypatch.setattr(vae_module, "install_h3_vae_optimizations", optimization)
 
         def patch(model):
@@ -244,7 +243,7 @@ def omni_vae_factory(monkeypatch):
             install_omni_ops(model)
             events.append(("omni_patch", None))
 
-        patch_mock = Mock(side_effect=patch)
+        patch_mock = mocker.Mock(side_effect=patch)
         monkeypatch.setattr(vae_ops, "patch_minimax_h3_video_vae", patch_mock)
 
         def quantize(decoder, quant_config, **kwargs):
@@ -261,7 +260,7 @@ def omni_vae_factory(monkeypatch):
             events.append(("quantize", None))
             return "int8-report"
 
-        quantize_mock = Mock(side_effect=quantize)
+        quantize_mock = mocker.Mock(side_effect=quantize)
         monkeypatch.setattr(vae_int8, "install_h3_video_vae_int8", quantize_mock)
 
         def temporal(model, **kwargs):
@@ -280,7 +279,7 @@ def omni_vae_factory(monkeypatch):
             if patch_mock.called:
                 assert remote.model.decoder.transformer_blocks[0].norm1.weight.dtype == torch.float32
             events.append(("snapshot", None))
-            return Mock()
+            return mocker.Mock()
 
         monkeypatch.setattr(vae_module, "PinnedModuleStager", stager)
         vae = vae_module.MiniMaxH3VideoVAE(
@@ -387,13 +386,13 @@ def test_omni_ops_does_not_bypass_int8_first_parameter_guard(omni_vae_factory):
         omni_vae_factory("1", break_first_parameter=True)
 
 
-def test_omni_norm_and_int8_parameters_survive_residency_cycle():
+def test_omni_norm_and_int8_parameters_survive_residency_cycle(mocker):
     from vllm_omni.diffusion.layers.norm import RMSNorm
     from vllm_omni.diffusion.models.minimax_h3 import vae_ops
 
     model = nn.Module()
     model.decoder = nn.Module()
-    model.decoder.transformer_blocks = nn.ModuleList([_native_transformer_block()])
+    model.decoder.transformer_blocks = nn.ModuleList([_native_transformer_block(mocker)])
     block = model.decoder.transformer_blocks[0]
     with torch.no_grad():
         block.norm1.weight.copy_(torch.arange(1, 5, dtype=torch.float32))

@@ -642,7 +642,7 @@ def test_requested_model_offload_without_backend_uses_resident_components():
 @pytest.mark.parametrize("text_resident", [False, True])
 @pytest.mark.parametrize("name", ["video_vae", "encoder_component", "decoder_component", "audio_vae", "text_encoder"])
 @pytest.mark.parametrize("fails", [False, True])
-def test_dlo_component_residency_context(resident, text_resident, name, fails):
+def test_dlo_component_residency_context(mocker, resident, text_resident, name, fails):
     from vllm_omni.diffusion.data import OmniDiffusionConfig
     from vllm_omni.diffusion.models.minimax_h3 import MiniMaxH3Pipeline
     from vllm_omni.diffusion.models.minimax_h3.vae import _VideoVAEPartProxy
@@ -656,13 +656,13 @@ def test_dlo_component_residency_context(resident, text_resident, name, fails):
     )
     for module_name in ("video_vae", "audio_vae", "text_encoder"):
         module = torch.nn.Module()
-        module.load_to_device = Mock()
-        module.offload_to_cpu = Mock()
+        module.load_to_device = mocker.Mock()
+        module.offload_to_cpu = mocker.Mock()
         setattr(pipeline, module_name, module)
     for part in ("encoder", "decoder"):
         proxy = _VideoVAEPartProxy(pipeline.video_vae, part)
-        proxy.load_to_device = Mock()
-        proxy.offload_to_cpu = Mock()
+        proxy.load_to_device = mocker.Mock()
+        proxy.offload_to_cpu = mocker.Mock()
         setattr(pipeline.video_vae, f"{part}_component", proxy)
     component = getattr(pipeline.video_vae, name) if name.endswith("_component") else getattr(pipeline, name)
     should_stage = not text_resident if name == "text_encoder" else not resident
@@ -705,7 +705,9 @@ def test_dlo_text_residency_rejects_explicit_encoder_offload():
 @pytest.mark.parametrize("vae_resident", [False, True])
 @pytest.mark.parametrize("encoder_loaded", [False, True])
 @pytest.mark.parametrize("compact", [False, True])
-def test_dlo_text_residency_plan_and_placement(monkeypatch, text_resident, vae_resident, encoder_loaded, compact):
+def test_dlo_text_residency_plan_and_placement(
+    monkeypatch, mocker, text_resident, vae_resident, encoder_loaded, compact
+):
     from vllm_omni.diffusion.data import OmniDiffusionConfig
     from vllm_omni.diffusion.models.minimax_h3 import pipeline_minimax_h3 as pipeline_module
     from vllm_omni.diffusion.offloader.base import OffloadConfig
@@ -716,7 +718,7 @@ def test_dlo_text_residency_plan_and_placement(monkeypatch, text_resident, vae_r
     # before it resolves or loads checkpoints.
     monkeypatch.setattr(pipeline_module, "get_local_device", lambda: torch.device("cpu"))
     monkeypatch.setattr(
-        pipeline_module, "is_minimax_h3_modular", Mock(side_effect=RuntimeError("stop after component plan"))
+        pipeline_module, "is_minimax_h3_modular", mocker.Mock(side_effect=RuntimeError("stop after component plan"))
     )
     config = OmniDiffusionConfig(
         model="unused",
@@ -751,9 +753,9 @@ def test_dlo_text_residency_plan_and_placement(monkeypatch, text_resident, vae_r
     pipeline.transformers_ref = None
     for name in ("text_encoder", "video_vae", "audio_vae"):
         module = torch.nn.Module()
-        module.load_to_device = Mock()
-        module.offload_to_cpu = Mock()
-        module.to = Mock(wraps=module.to)
+        module.load_to_device = mocker.Mock()
+        module.offload_to_cpu = mocker.Mock()
+        module.to = mocker.Mock(wraps=module.to)
         setattr(pipeline, name, module)
     pipeline.text_encoder.vision = torch.nn.Module()
     pipeline.text_encoder.vision.blocks = torch.nn.ModuleList([torch.nn.Linear(2, 2) for _ in range(2)])
@@ -769,7 +771,7 @@ def test_dlo_text_residency_plan_and_placement(monkeypatch, text_resident, vae_r
     assert resolved.dits[0].selected
     assert all(component.on_demand is (not vae_resident and not compact) for component in resolved.vaes)
 
-    install_encoder_hooks = Mock(return_value=True)
+    install_encoder_hooks = mocker.Mock(return_value=True)
     prepare_pipeline_components(
         resolved, device=torch.device("cpu"), staged_components=[], enable_encoder_blocks=install_encoder_hooks
     )
