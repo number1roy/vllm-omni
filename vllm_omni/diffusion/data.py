@@ -952,6 +952,7 @@ class OmniDiffusionConfig:
     # Distributed layer-wise offloading with H2D + AllGather overlap (RFC-1)
     enable_distributed_layerwise_offload: bool = False
     dlo_vae_resident: bool = False
+    dlo_text_encoder_resident: bool = False
     # If True: shard weights 1/dp_size + AllGather (saves CPU memory, requires
     # concurrent requests in DP mode). If False: each rank streams the standard
     # loader's rank-local tensors (including TP-local shards) via H2D only.
@@ -1246,6 +1247,8 @@ class OmniDiffusionConfig:
         parse_reference_kv_config(self.kv_offload_config)
         if type(self.dlo_vae_resident) is not bool:
             raise ValueError("dlo_vae_resident must be a boolean")
+        if type(self.dlo_text_encoder_resident) is not bool:
+            raise ValueError("dlo_text_encoder_resident must be a boolean")
         if self.vae_tile_size is not None and (type(self.vae_tile_size) is not int or self.vae_tile_size <= 0):
             raise ValueError("vae_tile_size must be a positive integer when set")
         if self.vae_tile_overlap is not None and (type(self.vae_tile_overlap) is not int or self.vae_tile_overlap < 0):
