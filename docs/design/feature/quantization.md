@@ -147,6 +147,26 @@ This prevents a model from interpreting serialized weights with an online
 loader or silently applying the wrong method to one transformer in a
 multi-transformer pipeline.
 
+MiniMax H3's `additional_config.offline_quantization` overrides component weight
+sources while preserving the original model snapshot's architecture and
+non-overridden components. Its streaming reader validates the ModelSlim scheme,
+tensor dtype, shape, shard index, and required scales before loading. Native
+INT8 uses serialized `W8A8_DYNAMIC` weights, retaining the existing QKV/MLP
+mapping and TP-aware parameter loaders for both weights and channel scales.
+FLOAT projections remain unquantized; unsupported native INT8 shapes fail
+rather than casting INT8 bytes into floating weights. Component routing exposes
+offline status only when every enabled quantized component is offline, allowing
+CPU offload loading without startup weight quantization.
+
+H3 also accepts the supplied mixed MXFP8/dual-scale FP4 delivery through an
+explicit `execution_mode="dequantize"` compatibility path. This reconstructs
+floating weights using all serialized scale levels and does not imply native
+MX compute. Native mixed MX loading is rejected. Custom component readers
+bypass direct checkpoint mmap; HSDP and host weight runtime are rejected for
+these overrides. VAE state replacement happens before inference patches are
+installed. See the [INT8 guide](../../user_guide/quantization/int8.md#minimax-h3-offline-component-checkpoints)
+for the supported checkpoint contract and limitations.
+
 ## Model and layer integration
 
 Diffusion model constructors receive the resolved configuration and pass it to

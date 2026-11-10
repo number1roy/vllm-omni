@@ -105,3 +105,99 @@ omni = Omni(
 
 Only add a new model to the supported table after comparing the Int8 output
 against a BF16 baseline and documenting any required `ignored_layers`.
+
+## MiniMax H3 offline component checkpoints
+
+H3 can override the transformer's weight source with a local ModelSlim
+checkpoint. Keep `model` pointing to the original, complete native H3 partition:
+the quantized delivery does not replace its architecture configuration,
+tokenizer, text encoder, or trusted VAE modeling code.
+
+### Native INT8 W8A8 with dynamic activations
+
+```python
+omni = Omni(
+    model="/path/to/original/FL2VA",
+    trust_remote_code=True,
+    quantization_config={
+        "transformer": {
+            "method": "int8",
+            "is_checkpoint_int8_serialized": True,
+        },
+        "default": None,
+    },
+    additional_config={
+        "offline_quantization": {
+            "components": {"transformer": "/path/to/int8/transformer"},
+        },
+    },
+)
+```
+
+The component directory must contain `quant_model_description.json` and
+safetensors weights (optionally sharded with a safetensors index). The supported
+INT8 contract is ModelSlim `W8A8_DYNAMIC`: signed INT8 `[N,K]` weights and
+positive, finite FP32 per-output-channel `weight_scale`, shaped `[N]` or `[N,1]`.
+An optional `weight_offset` must be zero. Static ModelSlim `W8A8` with
+`quant_bias`, `input_scale`, `input_offset`, or `deq_scale` is a different
+contract and is rejected. Activations are still quantized dynamically during
+inference; weights are loaded directly without startup quantization.
+
+Both native H3 names and the corresponding Diffusers names are accepted. FLOAT
+layers are inferred from the description and kept unquantized. Every projection
+merged into one QKV or gate/up parameter must use the same scheme. H3's fixed
+FP32 input/output projections must remain FLOAT. Missing weights/scales,
+unsupported tensors, and precision mismatches fail loading rather than using
+the original transformer's weights. On NPU a per-rank output width above
+65,535 fails early: increase TP or export that projection as FLOAT.
+
+### Delivered MXFP8 / dual-scale MXFP4 compatibility mode
+
+```python
+omni = Omni(
+    model="/path/to/original/FL2VA",
+    trust_remote_code=True,
+    quantization_config=None,
+    additional_config={
+        "offline_quantization": {
+            "path": "/path/to/MiniMax-H3-Quantize",
+            "execution_mode": "dequantize",
+        },
+    },
+)
+```
+
+For this delivery layout, root resolution selects:
+
+| Component | Relative directory |
+| --- | --- |
+| Transformer | `output_jiaofu/minimax_h3_fl2va` |
+| Video VAE | `output_jiaofu_support_original/video_vae` |
+| Audio VAE | `output_jiaofu_support_original/audio_vae` |
+
+The original DiT delivery is used because the converted transformer directory
+omits FP4 `weight_dual_scale`. The reader reconstructs E4M3 MXFP8 using E8M0
+scales, and packed E2M1 FP4 using both E8M0 and FP32 dual scales. Fine groups
+contain 32 K elements, including partial final groups such as the video VAE's
+K=24 projection. The supplied FP4 dual scales use groups of 32; they must not be
+treated as the groups of 512 expected by the existing native dual-scale kernel.
+
+This explicit compatibility mode reconstructs floating-point weights on CPU,
+then loads the model's ordinary floating-point parameters. It does **not**
+provide native MX activation quantization, low-bit compute, or low-bit runtime
+memory savings. Native execution of this mixed MX delivery is unsupported and
+is rejected; Ascend 910B cannot execute the native MX kernels. Native MX support
+requires separate kernel/layout work and validation on supported hardware.
+
+VAE overrides require both encoder and decoder enabled. VAE loading currently
+constructs the original component before replacing its state, so the original
+VAE checkpoint must remain available. Explicit `components` paths can select
+only the desired overrides. Offline overrides currently require a standalone
+native partition without HSDP, host weight runtime, LoRA/fused adapters,
+replacement VAE decoders, or a combined FL2VA/Ref2VA model. Direct DLO checkpoint
+mmap is bypassed so reconstruction and strict format checks cannot be skipped.
+
+The supplied MX delivery has been checked against its tensor metadata and
+floating reconstruction tests. INT8 delivery-specific output quality and full
+H3 generation must be validated after the INT8 weights are provided; the
+examples above are loading configurations, not an end-to-end accuracy claim.

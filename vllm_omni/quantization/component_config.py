@@ -158,3 +158,12 @@ class ComponentQuantizationConfig(QuantizationConfig):
     @property
     def default_config(self) -> QuantizationConfig | None:
         return self._default
+
+    @property
+    def is_checkpoint_quantized(self) -> bool:
+        """CPU loading is safe only when every enabled component is offline."""
+        configs = [config for config in (*self._components.values(), self._default) if config is not None]
+        return bool(configs) and all(
+            getattr(config, "is_checkpoint_quantized", False) or getattr(config, "data_type", None) == "mx_fp"
+            for config in configs
+        )

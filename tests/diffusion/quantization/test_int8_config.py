@@ -19,6 +19,74 @@ npu_available = pytest.mark.skipif(not current_omni_platform.is_npu(), reason="N
 cuda_available = pytest.mark.skipif(not current_omni_platform.is_cuda(), reason="GPU platform not available.")
 
 
+def test_serialized_int8_is_recognized_through_component_routing(monkeypatch, mocker):
+    from vllm_omni.quantization.int8_config import DiffusionInt8Config, NPUInt8LinearMethod
+
+    config = build_quant_config(
+        {
+            "transformer": {"method": "int8", "is_checkpoint_int8_serialized": True},
+            "default": None,
+        }
+    )
+    assert config.is_checkpoint_quantized
+    monkeypatch.setattr(current_omni_platform, "is_cuda", lambda: False)
+    monkeypatch.setattr(current_omni_platform, "is_npu", lambda: True)
+    layer = mocker.Mock(spec=LinearBase)
+    method = config.get_quant_method(layer, "transformer.blocks.0.mlp.fc1")
+    assert type(method) is NPUInt8LinearMethod
+    assert config.get_quant_method(layer, "text_encoder.layers.0") is None
+    mixed = build_quant_config(
+        {
+            "transformer": {"method": "int8", "is_checkpoint_int8_serialized": True},
+            "text_encoder": {"method": "int8"},
+        }
+    )
+    assert not mixed.is_checkpoint_quantized
+    assert not DiffusionInt8Config.from_config(
+        {"quant_method": "int8", "is_checkpoint_int8_serialized": False}
+    ).is_checkpoint_quantized
+
+
+def test_offline_npu_int8_postload_preserves_bytes_without_weight_quantization(monkeypatch):
+    from types import SimpleNamespace
+
+    import vllm.distributed.parallel_state as parallel_state
+
+    from vllm_omni.quantization import int8_config
+
+    monkeypatch.setattr(parallel_state, "get_tp_group", lambda: SimpleNamespace(rank_in_group=0, world_size=1))
+    method = int8_config.NPUInt8LinearMethod(int8_config.DiffusionInt8Config(is_checkpoint_int8_serialized=True))
+    layer = Module()
+    method.create_weights(layer, 4, [1], 4, 1, torch.bfloat16, weight_loader=lambda *_: None)
+    weight = torch.tensor([[1, -2, 3, -4]], dtype=torch.int8)
+    with torch.no_grad():
+        layer.weight.copy_(weight)
+        layer.weight_scale.fill_(0.125)
+    if int8_config.torch_npu is not None:
+        monkeypatch.setattr(
+            int8_config.torch_npu,
+            "npu_dynamic_quant",
+            lambda *_args, **_kwargs: pytest.fail("offline postload must not quantize weights"),
+        )
+    method.process_weights_after_loading(layer)
+    torch.testing.assert_close(layer.weight, weight.T.contiguous())
+    torch.testing.assert_close(layer.weight_scale, torch.tensor([0.125]))
+
+
+def test_offline_npu_int8_rejects_unexecutable_width_before_allocating():
+    from vllm_omni.quantization.int8_config import (
+        NPU_QUANT_MATMUL_MAX_OUT_FEATURES,
+        DiffusionInt8Config,
+        NPUInt8LinearMethod,
+    )
+
+    layer = Module()
+    method = NPUInt8LinearMethod(DiffusionInt8Config(is_checkpoint_int8_serialized=True))
+    with pytest.raises(ValueError, match="increase tensor parallelism"):
+        method.create_weights(layer, 8, [NPU_QUANT_MATMUL_MAX_OUT_FEATURES + 1], 8, 65536, torch.bfloat16)
+    assert not list(layer.parameters())
+
+
 def test_int8_config_creation():
     """Test that Int8 config can be created."""
     config = build_quant_config("int8")

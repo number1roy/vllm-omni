@@ -184,6 +184,10 @@ class DiffusionInt8Config(QuantizationConfig):
         self.activation_scheme = activation_scheme
         self.ignored_layers = ignored_layers or []
 
+    @property
+    def is_checkpoint_quantized(self) -> bool:
+        return self.is_checkpoint_int8_serialized
+
     @classmethod
     def get_name(cls) -> QuantizationMethods:
         return "int8"
@@ -208,7 +212,9 @@ class DiffusionInt8Config(QuantizationConfig):
     @classmethod
     def from_config(cls, config: dict[str, Any]) -> "DiffusionInt8Config":
         quant_method = cls.get_from_keys(config, ["quant_method"])
-        is_checkpoint_int8_serialized = "int8" in quant_method
+        is_checkpoint_int8_serialized = cls.get_from_keys_or(
+            config, ["is_checkpoint_int8_serialized"], "int8" in quant_method
+        )
         activation_scheme = cls.get_from_keys_or(config, ["activation_scheme"], "dynamic")
         ignored_layers = cls.get_from_keys_or(config, ["ignored_layers"], None)
 
@@ -505,14 +511,48 @@ class NPUInt8LinearMethod(BaseInt8LinearMethod):
     def __init__(self, quant_config: DiffusionInt8Config):
         super().__init__(quant_config)
 
-    def create_weights(self, layer: torch.nn.Module, *args, **kwargs) -> None:
-        if _fell_back_to_unquantized_npu(layer, *args, **kwargs):
+    def create_weights(
+        self,
+        layer: torch.nn.Module,
+        input_size_per_partition: int,
+        output_partition_sizes: list[int],
+        input_size: int,
+        output_size: int,
+        params_dtype: torch.dtype,
+        **extra_weight_attrs,
+    ) -> None:
+        if self.quant_config.is_checkpoint_int8_serialized:
+            # Serialized INT8 cannot fall back by casting quantized bytes into
+            # an unquantized floating-point parameter. Increase TP or export a
+            # floating-point fallback layer (with ignored_layers) explicitly.
+            if sum(output_partition_sizes) > NPU_QUANT_MATMUL_MAX_OUT_FEATURES:
+                raise ValueError(
+                    "offline INT8 layer exceeds npu_quant_matmul output limit; increase tensor parallelism "
+                    "or export this layer as FLOAT and add it to ignored_layers"
+                )
+        elif _fell_back_to_unquantized_npu(
+            layer,
+            input_size_per_partition,
+            output_partition_sizes,
+            input_size,
+            output_size,
+            params_dtype,
+            **extra_weight_attrs,
+        ):
             return
-        super().create_weights(layer, *args, **kwargs)
+        super().create_weights(
+            layer,
+            input_size_per_partition,
+            output_partition_sizes,
+            input_size,
+            output_size,
+            params_dtype,
+            **extra_weight_attrs,
+        )
 
     def process_weights_after_loading(self, layer: Module) -> None:
         layer.weight.data = layer.weight.data.t().contiguous()
-        layer.weight_scale.data = layer.weight_scale.data.squeeze()
+        layer.weight_scale.data = layer.weight_scale.data.reshape(-1)
 
     def apply(
         self,

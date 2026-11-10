@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import logging
 import sys
 from collections.abc import Sequence
 from dataclasses import replace
@@ -17,12 +18,19 @@ _RUNNER_MODULES = (
     "vllm.v1.worker.gpu_model_runner",
     "vllm.v1.worker.gpu.model_states.default",
 )
+logger = logging.getLogger(__name__)
 
 
 def apply_img2img_mm_prefix_patch() -> None:
     from vllm.v1.attention.backends import utils
 
-    original = utils.compute_mm_prefix_ranges
+    original = getattr(utils, "compute_mm_prefix_ranges", None)
+    if original is None:
+        logger.warning(
+            "Skipping Bagel img2img prefix patch: this vLLM version does not provide "
+            "compute_mm_prefix_ranges. Bagel img2img prefix attention is unavailable."
+        )
+        return
     if getattr(original, "_omni_img2img_mm_prefix", False):
         return
 

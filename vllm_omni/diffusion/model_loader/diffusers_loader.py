@@ -215,6 +215,9 @@ class DiffusersPipelineLoader(HWRLoaderMixin):
         weight_name_patterns: tuple[str, ...] | None = None
         """Optional tensor-name globs applied before safetensor materialization."""
 
+        weight_iterator_factory: Callable[[], Iterable[tuple[str, torch.Tensor]]] | None = None
+        """Optional streaming component reader for serialized checkpoint formats."""
+
     counter_before_loading_weights: float = 0.0
     counter_after_loading_weights: float = 0.0
 
@@ -387,6 +390,10 @@ class DiffusersPipelineLoader(HWRLoaderMixin):
         model: nn.Module | None = None,
     ) -> Generator[tuple[str, torch.Tensor], None, None]:
         """Get an iterator for the model weights based on the load format."""
+        if source.weight_iterator_factory is not None:
+            if self.counter_before_loading_weights == 0.0:
+                self.counter_before_loading_weights = time.perf_counter()
+            return ((source.prefix + name, tensor) for name, tensor in source.weight_iterator_factory())
         _, hf_weights_files, use_safetensors = self._prepare_weights(
             source.model_or_path,
             source.subfolder,
@@ -870,7 +877,12 @@ class DiffusersPipelineLoader(HWRLoaderMixin):
                 hwr_active = hwr_state is not None
                 if hwr_active and hwr_state is not None:
                     self.host_weight_plan = cast(HostWeightPlan | None, hwr_state.get("plan"))
-                if dit_distributed_offload and not hwr_active and not self._force_canonical_load:
+                if (
+                    dit_distributed_offload
+                    and not hwr_active
+                    and not self._force_canonical_load
+                    and not any(source.weight_iterator_factory is not None for source in weight_sources)
+                ):
                     lora_backend = getattr(self.od_config, "lora_backend", None)
                     has_distilled_lora = lora_backend in (LoRABackend.DISTILL, "distill") and bool(
                         getattr(self.od_config, "lora_path", None)

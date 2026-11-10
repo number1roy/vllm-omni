@@ -41,6 +41,24 @@ pytestmark = [pytest.mark.core_model, pytest.mark.diffusion, pytest.mark.cpu]
 model_path = "hf-internal-testing/tiny-helios-modular-pipe"
 
 
+def test_component_reader_keeps_prefix_and_skips_default_file_preparation(monkeypatch):
+    loader = object.__new__(DiffusersPipelineLoader)
+    loader.counter_before_loading_weights = 0.0
+    monkeypatch.setattr(loader, "_prepare_weights", lambda *_: pytest.fail("custom reader must own file loading"))
+    weight = torch.tensor([[1, -2]], dtype=torch.int8)
+    source = DiffusersPipelineLoader.ComponentSource(
+        model_or_path="unused",
+        subfolder=None,
+        revision=None,
+        prefix="transformer.",
+        weight_iterator_factory=lambda: iter([("proj.weight", weight)]),
+    )
+    items = list(loader._get_weights_iterator(source))
+    assert items[0][0] == "transformer.proj.weight"
+    assert items[0][1] is weight
+    assert loader.counter_before_loading_weights > 0
+
+
 @pytest.fixture(scope="module")
 def prefetch_helios_model():
     """Downloads the tiny helios model prior to running a test."""
@@ -1130,6 +1148,21 @@ def _stub_ordinary_loader(loader, model, monkeypatch, loader_mod) -> None:
         "build_checkpoint_mmap_plan",
         lambda *_args, **_kwargs: HostWeightPlanResult(None, "test fallback"),
     )
+
+
+def test_offline_component_reader_bypasses_dlo_direct_mmap(monkeypatch):
+    config = _compact_layer_offload_config(["dit"], {"dit": {"weight_transfer": "allgather"}})
+    loader = DiffusersPipelineLoader(LoadConfig(), config)
+    model = _DummyPipelineModel(source_prefix="transformer.")
+    model.weights_sources[0].weight_iterator_factory = lambda: iter(())
+    _stub_ordinary_loader(loader, model, monkeypatch, loader_module)
+    monkeypatch.setattr(
+        loader_module,
+        "build_checkpoint_mmap_plan",
+        lambda *_args, **_kwargs: pytest.fail("direct mmap would bypass offline reconstruction"),
+    )
+    assert loader.load_model(load_device="cpu") is model
+    assert loader.take_host_weight_plan() is None
 
 
 def test_text_encoder_allgather_rejects_unsupported_online_quantization(monkeypatch):
