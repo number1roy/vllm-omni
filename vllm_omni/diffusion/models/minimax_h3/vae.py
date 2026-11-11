@@ -411,6 +411,10 @@ class MiniMaxH3VideoVAE(nn.Module, DistributedVaeMixin):
                 device=device,
             )
         install_temporal_stream_patches(self.remote.model, pixel_transform=self._pixel_transform)
+        if offline_checkpoint is not None and offline_checkpoint.execution_mode == "native_mx":
+            from .native_mx import install_native_mx_vae
+
+            install_native_mx_vae(self.remote.model, offline_checkpoint, device)
         self.model = self.remote.model
         self._stager = None
         self._encoder_stager = None
@@ -441,23 +445,26 @@ class MiniMaxH3VideoVAE(nn.Module, DistributedVaeMixin):
         the checkpoint's structure is not discoverable, fall back to
         whole-module staging (the previous single-stager behavior).
         """
+        # Eagerly pinning every VAE storage on every NPU rank can exhaust
+        # the runtime host allocator despite ample pageable host RAM. Keep
+        # identical CPU masters and let the stager copy them synchronously.
         part_names = ("encoder", "quant_conv", "post_quant_conv", "decoder")
         if all(isinstance(getattr(self.model, name, None), nn.Module) for name in part_names):
             self._encoder_stager = PinnedModuleStager(
                 [self.model.encoder, self.model.quant_conv],
                 device,
-                pin_memory=True,
+                pin_memory=device.type != "npu",
             )
             self._decoder_stager = PinnedModuleStager(
                 [self.model.post_quant_conv, self.model.decoder],
                 device,
-                pin_memory=True,
+                pin_memory=device.type != "npu",
             )
             return
         self._stager = PinnedModuleStager(
             self.remote,
             device,
-            pin_memory=True,
+            pin_memory=device.type != "npu",
         )
 
     def _part_stager(self, part: str) -> PinnedModuleStager | None:
@@ -1211,12 +1218,16 @@ class MiniMaxH3AudioVAE(nn.Module):
         # encoding and waveform decoding.
         initial_device = load_device or device
         self.remote.eval().to(device=initial_device, dtype=torch.float32)
+        if offline_checkpoint is not None and offline_checkpoint.execution_mode == "native_mx":
+            from .native_mx import install_native_mx_vae
+
+            install_native_mx_vae(self.remote.model, offline_checkpoint, device)
         self._stager = None
         if initial_device.type == "cpu" and device.type not in ("cpu", "meta"):
             self._stager = PinnedModuleStager(
                 self.remote,
                 device,
-                pin_memory=True,
+                pin_memory=device.type != "npu",
             )
         self.model = self.remote.model
         self.sample_rate = int(self.config_dict["sample_rate"])

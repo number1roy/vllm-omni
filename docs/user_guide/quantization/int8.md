@@ -11,7 +11,7 @@ Only online activation scaling is currently supported.
 ## Hardware Support
 
 | Device | Support |
-|--------|---------|
+| -------- | --------- |
 | NVIDIA Blackwell GPU (SM 100+) | ✅ |
 | NVIDIA Ada/Hopper GPU (SM 89+) | ✅ |
 | NVIDIA Ampere GPU (SM 80+) | ✅ |
@@ -27,7 +27,7 @@ guide.
 ### Diffusion Model (Qwen-Image, Wan2.2)
 
 | Model | HF models | CUDA | Ascend NPU | Mode | Recommendation |
-|-------|-----------|:----:|:----------:|------|----------------|
+| ------- | ----------- | :----: | :----------: | ------ | ---------------- |
 | Qwen-Image | `Qwen/Qwen-Image`, `Qwen/Qwen-Image-2512` | Yes | Yes | Online W8A8 | All layers |
 | Wan2.2 | Wan2.2 diffusion pipelines | Not validated | Not validated | Online W8A8 | Validate before enabling in docs |
 | Z-Image | `Tongyi-MAI/Z-Image-Turbo` | Yes | Yes | Online W8A8 | All layers |
@@ -38,14 +38,14 @@ layers, but they are not validated in this guide.
 ### Multi-Stage Omni/TTS Model (Qwen3-Omni, Qwen3-TTS)
 
 | Model | Scope | Status | Notes |
-|-------|-------|--------|-------|
+| ------- | ------- | -------- | ------- |
 | Qwen3-Omni | Thinker language-model stage | Not validated | Prefer checkpoint-supported ModelOpt FP8 or AutoRound paths |
 | Qwen3-TTS | TTS language-model stage | Not validated | No Int8 TTS stage support is documented |
 
 ### Multi-Stage Diffusion Model (BAGEL, GLM-Image)
 
 | Model | Scope | Status | Notes |
-|-------|-------|--------|-------|
+| ------- | ------- | -------- | ------- |
 | BAGEL | Stage-specific transformer or DiT module | Not validated | Requires explicit stage routing |
 | GLM-Image | Stage-specific transformer or DiT module | Not validated | Requires quality comparison with BF16 |
 
@@ -84,7 +84,7 @@ vllm serve <your-model> --omni --quantization int8
 ## Parameters
 
 | Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
+| ----------- | ------ | --------- | ------------- |
 | `method` | str | - | Quantization method (`"int8"`) |
 | `activation_scheme` | str | `"dynamic"` | `"dynamic"` selects online activation scaling; static is not supported |
 | `ignored_layers` | list[str] | `[]` | Layer name patterns to keep in BF16/FP16 |
@@ -185,9 +185,36 @@ treated as the groups of 512 expected by the existing native dual-scale kernel.
 This explicit compatibility mode reconstructs floating-point weights on CPU,
 then loads the model's ordinary floating-point parameters. It does **not**
 provide native MX activation quantization, low-bit compute, or low-bit runtime
-memory savings. Native execution of this mixed MX delivery is unsupported and
-is rejected; Ascend 910B cannot execute the native MX kernels. Native MX support
-requires separate kernel/layout work and validation on supported hardware.
+memory savings. Ascend 910B cannot execute the native MX kernels.
+
+### Ascend native mixed MX execution
+
+On hardware with native MX kernels, select `execution_mode="native_mx"` in
+the same offline configuration and keep `quantization_config=None`. Delivery
+metadata selects the precision: `W8A8_MXFP8` matrices use W8A8 and
+`W4A4_MXFP4_DUALSCALE` matrices use W4A4. FLOAT parameters keep their original
+precision. Every constituent of a fused QKV projection must share a scheme.
+
+At load time, all delivery scales are applied before weights are encoded for
+the native kernels. In particular, the supplied FP4 coarse groups of 32 are
+converted to single-scale MXFP4 groups of 32; they are not passed to the
+incompatible dual-level kernel with coarse groups of 512. This conversion can
+introduce additional error and requires output-quality evaluation. It is not
+a byte-preserving use of the original dual-scale representation.
+
+During inference, `npu_dynamic_mx_quant` quantizes activations and
+`npu_quant_matmul` multiplies low-bit operands. The GEMM returns BF16 before
+restoring the caller's output dtype; this does not make the multiply BF16.
+There is no floating GEMM fallback. K is padded to 64 and wide outputs are
+split into native low-bit GEMMs. VAE overrides replace only the delivery's
+quantized `nn.Linear` layers. Convolutions, attention, normalization, and
+other FLOAT operations retain their usual precision.
+
+Runtime weights and E8M0 scales use ordinary contiguous byte parameters,
+including packed FP4 bytes, so DLO can transport them without changing their
+bits. Hardware kernel compatibility, full generation, and quality must be
+validated for the specific runtime and checkpoint; selecting the mode alone
+is not a validation result.
 
 VAE overrides require both encoder and decoder enabled. VAE loading currently
 constructs the original component before replacing its state, so the original

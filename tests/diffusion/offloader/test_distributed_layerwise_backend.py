@@ -430,10 +430,12 @@ class TestDistributedLayerwiseOffloadHook:
                 atol=0,
             )
 
+    @pytest.mark.parametrize("h3_bits", [None, 4, 8])
     def test_allgather_reconstructs_online_mxfp8_weight_and_scale(
         self,
         patched_offload_runtime,
         monkeypatch,
+        h3_bits,
     ):
         """DLO must reconstruct finalized online-MXFP8 tensors byte-for-byte.
 
@@ -448,6 +450,15 @@ class TestDistributedLayerwiseOffloadHook:
         class OnlineMxfp8Block(nn.Module):
             def __init__(self):
                 super().__init__()
+                if h3_bits is not None:
+                    width = 32 if h3_bits == 4 else 64
+                    self.weight = nn.Parameter(
+                        torch.arange(3 * width, dtype=torch.uint8).reshape(3, width), requires_grad=False
+                    )
+                    self.weight_scale = nn.Parameter(
+                        torch.arange(121, 127, dtype=torch.uint8).reshape(3, 1, 2), requires_grad=False
+                    )
+                    return
                 logical = torch.arange(1.0, 13.0).reshape(3, 4)
                 # Build scales from raw e8m0 bit patterns (1 byte/elem).
                 npu_scale_bits = torch.arange(1, 13, dtype=torch.uint8).reshape(2, 3, 2)

@@ -838,14 +838,15 @@ class DiffusersPipelineLoader(HWRLoaderMixin):
                     if unsupported_methods:
                         raise ValueError(
                             "DLO+AllGather supports online quantization only for "
-                            "per-tensor FP8, INT8, and MXFP8 linears "
+                            "per-tensor FP8, INT8, MXFP8, and H3 plain-byte MX linears "
                             "(host-loaded unquantized fallback layers are also allowed); "
                             f"unsupported online methods: {', '.join(sorted(unsupported_methods))}. "
                             "Use rank-local transfer for the affected component or "
                             "disable online quantization."
                         )
                     logger.info(
-                        "Validated online methods (per-tensor FP8, INT8, MXFP8) for every component using DLO+AllGather"
+                        "Validated online methods (per-tensor FP8, INT8, MXFP8, H3 plain-byte MX) "
+                        "for every component using DLO+AllGather"
                     )
 
                 plan_result = None
@@ -1048,6 +1049,9 @@ class DiffusersPipelineLoader(HWRLoaderMixin):
           (NPU: (K, N) weight with (K_groups/2, N, 2) scale) or with the
           scale stored as a transposed view (vLLM kernel, .t() over a
           contiguous (K/32, N) buffer).
+        - H3 native MX: contiguous uint8 weight (N, K) for FP8 or packed
+          (N, K/2) for FP4, plus contiguous uint8 E8M0 scale (N, K/64, 2).
+          These are plain ND byte tensors, not dual-scale or NZ storage.
 
         Both shape families are already covered by the physical-order packing
         that online FP8 requires. Other online methods may create different
@@ -1064,6 +1068,7 @@ class DiffusersPipelineLoader(HWRLoaderMixin):
             Fp8PerTensorOnlineLinearMethod,
         )
 
+        from vllm_omni.diffusion.models.minimax_h3.native_mx import NativeMXLinearMethod
         from vllm_omni.quantization.int8_config import (
             Int8OnlineLinearMethod,
             NPUInt8OnlineLinearMethod,
@@ -1090,6 +1095,7 @@ class DiffusersPipelineLoader(HWRLoaderMixin):
             Int8OnlineLinearMethod,
             NPUInt8OnlineLinearMethod,
             UnquantizedHostLinearMethod,
+            NativeMXLinearMethod,
             *mxfp8_online_methods,
         )
 

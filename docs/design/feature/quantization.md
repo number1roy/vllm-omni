@@ -161,7 +161,14 @@ CPU offload loading without startup weight quantization.
 H3 also accepts the supplied mixed MXFP8/dual-scale FP4 delivery through an
 explicit `execution_mode="dequantize"` compatibility path. This reconstructs
 floating weights using all serialized scale levels and does not imply native
-MX compute. Native mixed MX loading is rejected. Custom component readers
+MX compute. The `execution_mode="native_mx"` adapter instead re-encodes the
+fully reconstructed weights once at load time, preserving delivery bit widths:
+MXFP8 uses W8A8 and dual-scale FP4 uses native single-scale W4A4. Runtime
+activation quantization and GEMM use Ascend MX operators without a floating
+GEMM fallback. Plain uint8 weight/scale parameters preserve their bytes through
+DLO; packed FP4 does not use the incompatible dual-level/NZ representation.
+The conversion may introduce error and requires hardware and quality validation.
+Custom component readers
 bypass direct checkpoint mmap; HSDP and host weight runtime are rejected for
 these overrides. VAE state replacement happens before inference patches are
 installed. See the [INT8 guide](../../user_guide/quantization/int8.md#minimax-h3-offline-component-checkpoints)

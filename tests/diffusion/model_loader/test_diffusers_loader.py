@@ -1504,7 +1504,7 @@ def test_dlo_allgather_rejects_unvalidated_online_quant_method(monkeypatch):
         ),
     )
 
-    with pytest.raises(ValueError, match="per-tensor FP8, INT8, and MXFP8 linears"):
+    with pytest.raises(ValueError, match="H3 plain-byte MX linears"):
         loader.load_model(load_device="cpu")
 
 

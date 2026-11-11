@@ -2,8 +2,9 @@
 # SPDX-FileCopyrightText: Copyright contributors to the vLLM-Omni project
 """Strict, streaming readers for offline ModelSlim H3 component checkpoints.
 
-MX reconstruction is an explicit floating-point compatibility mode. It does
-not run MX activation quantization or claim native MX inference on Ascend A2.
+MX reconstruction either provides explicit floating-point compatibility or
+feeds the Ascend native MX adapter, which encodes weights once at load time.
+The reader itself performs no activation quantization or GEMM.
 """
 
 from __future__ import annotations
@@ -73,6 +74,7 @@ class OfflineComponentCheckpoint:
 
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path).resolve()
+        self.execution_mode = "dequantize"
         if not self.path.is_dir():
             raise ValueError(f"offline component directory does not exist: {self.path}")
         description_path = self.path / "quant_model_description.json"
@@ -229,8 +231,8 @@ def resolve_offline_components(
     if unknown:
         raise ValueError(f"unknown offline_quantization options: {sorted(unknown)}")
     mode = config.get("execution_mode", "native")
-    if mode not in {"native", "dequantize"}:
-        raise ValueError("offline execution_mode must be 'native' or 'dequantize'")
+    if mode not in {"native", "dequantize", "native_mx"}:
+        raise ValueError("offline execution_mode must be native, dequantize, or native_mx")
     if "path" in config and "components" in config:
         raise ValueError("specify offline path or components, not both")
     paths: dict[str, str | Path]
@@ -252,11 +254,18 @@ def resolve_offline_components(
     if unknown_components := set(paths) - {"transformer", "video_vae", "audio_vae"}:
         raise ValueError(f"unsupported offline components: {sorted(unknown_components)}")
     checkpoints = {name: OfflineComponentCheckpoint(path) for name, path in paths.items()}
+    for checkpoint in checkpoints.values():
+        checkpoint.execution_mode = str(mode)
+    if mode == "native_mx":
+        if any(not checkpoint.schemes <= {_MX8, _MX4} for checkpoint in checkpoints.values()):
+            raise ValueError("native MX execution requires MXFP8/MXFP4 component checkpoints")
     if mode == "native" and any(checkpoint.schemes != {_INT8} for checkpoint in checkpoints.values()):
         raise ValueError("delivery contains MX weights, not INT8; use execution_mode='dequantize' explicitly")
     if mode == "native" and set(checkpoints) != {"transformer"}:
         raise ValueError("native INT8 currently supports the H3 transformer; VAE loading requires dequantize mode")
-    return checkpoints, mode == "dequantize"
+    # Native MX converts the delivery representation once during loading, after
+    # applying every original scale. Runtime weights and activations stay MX.
+    return checkpoints, mode != "native"
 
 
 def load_offline_vae_weights(model: torch.nn.Module, checkpoint: OfflineComponentCheckpoint) -> None:

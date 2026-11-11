@@ -1179,10 +1179,18 @@ class MiniMaxH3Pipeline(
             "transformer",
         )
         offline_transformer = self._offline_checkpoints.get("transformer")
+        native_mx = any(checkpoint.execution_mode == "native_mx" for checkpoint in self._offline_checkpoints.values())
         if self._offline_checkpoints:
             from vllm_omni.quantization.int8_config import DiffusionInt8Config
 
-            if self._offline_dequantize:
+            if native_mx:
+                if transformer_quant_config is not None or od_config.quantization_config is not None:
+                    raise ValueError("offline native MX selects quantization from delivery metadata; remove overrides")
+                if offline_transformer is not None:
+                    from .native_mx import H3NativeMXConfig
+
+                    transformer_quant_config = H3NativeMXConfig.from_checkpoint(offline_transformer)
+            elif self._offline_dequantize:
                 if transformer_quant_config is not None:
                     raise ValueError("offline dequantize mode requires transformer quantization_config=None")
             elif not isinstance(transformer_quant_config, DiffusionInt8Config) or not (
@@ -1265,6 +1273,8 @@ class MiniMaxH3Pipeline(
         )
         if offline_transformer is not None:
             self.transformer._strict_offline_loading = True
+            if native_mx:
+                transformer_quant_config.validate_model_targets(self.transformer)
         if self._fasth3_checkpoint is not None:
             spec = self._fasth3_checkpoint
             if isinstance(spec, FastH3OmniCheckpointSpec) and self.transformer.arch.pdd_steps != 32:

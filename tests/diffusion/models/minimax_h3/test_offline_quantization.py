@@ -41,7 +41,7 @@ def _int8(path, *, shard_scales=False):
         "proj.weight_offset": torch.zeros(2, 1),
         "proj.bias": torch.tensor([1.0, 2.0]),
     }
-    desc = {name: "W8A8_DYNAMIC" if name != "proj.bias" else "FLOAT" for name in tensors}
+    desc: dict[str, object] = {name: "W8A8_DYNAMIC" if name != "proj.bias" else "FLOAT" for name in tensors}
     desc.update(version="1.0.0", metadata={}, optional={})
     return _checkpoint(path, tensors, desc, shard_scales=shard_scales)
 
@@ -108,6 +108,28 @@ def test_missing_dual_scale_is_rejected_before_loading(tmp_path):
     path = _checkpoint(tmp_path / "mx4", tensors, {name: "W4A4_MXFP4_DUALSCALE" for name in tensors})
     with pytest.raises(ValueError, match="weight_dual_scale"):
         OfflineComponentCheckpoint(path)
+
+
+def test_native_mx_loading_applies_all_delivery_scales_before_conversion(tmp_path):
+    mode = "native_mx"
+    tensors = {
+        "proj.weight": torch.full((2, 32), 0x22, dtype=torch.uint8),
+        "proj.weight_scale": torch.tensor([[126, 127], [128, 125]], dtype=torch.uint8),
+        "proj.weight_dual_scale": torch.tensor([[[0.3], [0.7]], [[1.1], [1.9]]]),
+    }
+    path = _checkpoint(tmp_path / "mx4", tensors, {name: "W4A4_MXFP4_DUALSCALE" for name in tensors})
+    checkpoints, reconstruct = resolve_offline_components({"path": str(path), "execution_mode": mode})
+    checkpoint = checkpoints["transformer"]
+    assert reconstruct and checkpoint.execution_mode == mode
+    actual = dict(checkpoint.iter_weights(dequantize=reconstruct))
+    assert set(actual) == {"proj.weight"}
+    expected = torch.tensor([[0.15, 0.7], [2.2, 0.475]]).repeat_interleave(32, dim=1)
+    torch.testing.assert_close(actual["proj.weight"], expected)
+
+
+def test_native_mx_rejects_int8_delivery(tmp_path):
+    with pytest.raises(ValueError, match="requires MXFP8/MXFP4"):
+        resolve_offline_components({"path": str(_int8(tmp_path / "int8")), "execution_mode": "native_mx"})
 
 
 def test_nonzero_int8_offset_is_not_silently_discarded(tmp_path):
