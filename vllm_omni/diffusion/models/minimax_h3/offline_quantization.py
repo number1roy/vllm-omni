@@ -13,6 +13,7 @@ import json
 from collections.abc import Iterator, Mapping
 from contextlib import ExitStack
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 
 import torch
@@ -21,7 +22,42 @@ from safetensors import safe_open
 _MX8 = "W8A8_MXFP8"
 _MX4 = "W4A4_MXFP4_DUALSCALE"
 _INT8 = "W8A8_DYNAMIC"
+_INT4 = "W4A4_DYNAMIC"
+_INT_SCHEMES = {_INT4, _INT8}
+_MX_SCHEMES = {_MX4, _MX8}
 _FLOAT_DTYPES = {"F16", "BF16", "F32", "F64"}
+
+
+def npu_quant_family(device_name: str) -> str:
+    """Explicit device allowlist; unknown NPU generations never guess a format."""
+    name = device_name.upper().replace("_", "").replace("-", "")
+    if name.startswith("ASCEND950"):
+        return "mx"
+    if name.startswith(("ASCEND910B", "ASCEND910C", "ASCEND91093")):
+        return "int"
+    raise ValueError(f"unsupported H3 native quantization NPU: {device_name}")
+
+
+@lru_cache(maxsize=16)
+def _device_quant_family(index: int) -> str:
+    import torch_npu
+
+    return npu_quant_family(torch_npu.npu.get_device_name(index))
+
+
+def resolve_npu_quant_family(device: str | None = None) -> str:
+    import torch_npu
+
+    target = torch.device(device) if device is not None else None
+    index = target.index if target is not None else None
+    if index is None:
+        index = torch_npu.npu.current_device()
+    return _device_quant_family(index)
+
+
+def require_native_family(family: str, device: torch.device) -> None:
+    if device.type != "npu" or resolve_npu_quant_family(str(device)) != family:
+        raise ValueError(f"H3 native {family} weights are incompatible with the selected NPU")
 
 
 def unpack_fp4(weight: torch.Tensor) -> torch.Tensor:
@@ -120,7 +156,7 @@ class OfflineComponentCheckpoint:
             raise ValueError(f"offline description references missing tensors: {sorted(missing)[:8]}")
         for name, spec in self.tensors.items():
             scheme = self.description.get(name, "FLOAT")
-            if scheme not in {"FLOAT", _INT8, _MX8, _MX4}:
+            if scheme not in {"FLOAT", _INT8, _INT4, _MX8, _MX4}:
                 raise ValueError(f"unsupported offline scheme {scheme!r} for {name}; static W8A8 is not dynamic W8A8")
             if scheme == "FLOAT":
                 if spec.dtype not in _FLOAT_DTYPES:
@@ -136,17 +172,17 @@ class OfflineComponentCheckpoint:
                 if self.description.get(module + ".weight") != scheme:
                     raise ValueError(f"orphan or inconsistent quantization scale: {name}")
                 continue
-            expected_dtype = {_INT8: "I8", _MX8: "F8_E4M3", _MX4: "U8"}[scheme]
-            if spec.dtype != expected_dtype or len(spec.shape) != 2:
-                raise ValueError(f"{name}: {scheme} requires {expected_dtype} matrix, got {spec}")
+            expected_dtypes = {_INT8: {"I8"}, _INT4: {"I8", "I32"}, _MX8: {"F8_E4M3"}, _MX4: {"U8"}}[scheme]
+            if spec.dtype not in expected_dtypes or len(spec.shape) != 2:
+                raise ValueError(f"{name}: {scheme} requires {expected_dtypes} matrix, got {spec}")
             scale = self.tensors.get(module + ".weight_scale")
             n, packed_k = spec.shape
-            k = packed_k * (2 if scheme == _MX4 else 1)
+            k = packed_k * (2 if scheme == _MX4 else 8 if scheme == _INT4 and spec.dtype == "I32" else 1)
             groups = (k + 31) // 32
-            allowed_scale_shapes = {(n,), (n, 1)} if scheme == _INT8 else {(n, groups)}
+            allowed_scale_shapes = {(n,), (n, 1)} if scheme in _INT_SCHEMES else {(n, groups)}
             if scale is None or scale.shape not in allowed_scale_shapes:
                 raise ValueError(f"{name}: missing or invalid weight_scale")
-            if scale.dtype not in ({"F32"} if scheme == _INT8 else {"U8"}):
+            if scale.dtype not in ({"F32"} if scheme in _INT_SCHEMES else {"U8"}):
                 raise ValueError(f"{name}: invalid weight_scale dtype {scale.dtype}")
             if self.description.get(module + ".weight_scale") != scheme:
                 raise ValueError(f"{name}: weight_scale scheme mismatch")
@@ -163,6 +199,21 @@ class OfflineComponentCheckpoint:
                     or self.description.get(module + ".weight_dual_scale") != scheme
                 ):
                     raise ValueError(f"{name}: missing or invalid weight_dual_scale")
+        for name, spec in self.tensors.items():
+            module, _, kind = name.rpartition(".")
+            scheme = self.description.get(module + ".weight")
+            if scheme in _INT_SCHEMES:
+                if kind in {"input_scale", "input_offset", "quant_bias", "deq_scale", "weight_dual_scale"}:
+                    raise ValueError(f"{name}: static/grouped integer corrections are unsupported")
+                if kind == "weight_offset" and (
+                    spec.dtype != "F32"
+                    or spec.shape
+                    not in {
+                        (self.tensors[module + ".weight"].shape[0],),
+                        (self.tensors[module + ".weight"].shape[0], 1),
+                    }
+                ):
+                    raise ValueError(f"{name}: invalid integer weight_offset shape/dtype")
         self.schemes = frozenset(
             self.description[name]
             for name in self.tensors
@@ -170,6 +221,31 @@ class OfflineComponentCheckpoint:
         )
         if not self.schemes:
             raise ValueError(f"offline checkpoint contains no quantized weights: {self.path}")
+
+    def integer_weight(self, name: str) -> tuple[torch.Tensor, torch.Tensor]:
+        """Read exact signed codes and scales, independent of runtime packing."""
+        from .integer_utils import unpack_int4
+
+        scheme = self.description.get(name)
+        if scheme not in _INT_SCHEMES or not name.endswith(".weight"):
+            raise ValueError(f"not an integer checkpoint weight: {name}")
+        prefix = name.removesuffix("weight")
+
+        def read(key):
+            with safe_open(str(self.tensors[key].file), framework="pt", device="cpu") as reader:
+                return reader.get_tensor(key)
+
+        weight, scale = read(name), read(prefix + "weight_scale")
+        if not torch.isfinite(scale).all() or torch.any(scale <= 0):
+            raise ValueError(f"{name}: integer scale must be finite and positive")
+        offset = prefix + "weight_offset"
+        if offset in self.tensors and torch.any(read(offset) != 0):
+            raise ValueError(f"{offset}: asymmetric integer weights are unsupported")
+        if scheme == _INT4:
+            weight = unpack_int4(weight) if weight.dtype == torch.int32 else weight
+            if torch.any(weight < -8) or torch.any(weight > 7):
+                raise ValueError(f"{name}: INT4 signed codes must be in [-8,7]")
+        return weight, scale
 
     @property
     def diffusers_weights(self) -> bool:
@@ -194,25 +270,31 @@ class OfflineComponentCheckpoint:
                     if not dequantize and kind == "weight_scale":
                         scale = read(name)
                         if not torch.isfinite(scale).all() or torch.any(scale <= 0):
-                            raise ValueError(f"{name}: INT8 scale must be finite and positive")
+                            raise ValueError(f"{name}: integer scale must be finite and positive")
                         yield name, scale
                     continue
                 weight = read(name)
-                if scheme == _INT8:
+                if scheme in _INT_SCHEMES:
                     offset_name = name.removesuffix("weight") + "weight_offset"
                     if offset_name in self.tensors and torch.any(read(offset_name) != 0):
-                        raise ValueError(f"{offset_name}: asymmetric INT8 weights are unsupported")
+                        raise ValueError(f"{offset_name}: asymmetric integer weights are unsupported")
+                if scheme == _INT4:
+                    from .integer_utils import unpack_int4
+
+                    weight = unpack_int4(weight) if weight.dtype == torch.int32 else weight
+                    if torch.any(weight < -8) or torch.any(weight > 7):
+                        raise ValueError(f"{name}: INT4 signed codes must be in [-8,7]")
                 if dequantize and scheme != "FLOAT":
                     prefix = name.removesuffix("weight")
                     scale = read(prefix + "weight_scale")
-                    if scheme == _INT8:
+                    if scheme in _INT_SCHEMES:
                         if not torch.isfinite(scale).all() or torch.any(scale <= 0):
-                            raise ValueError(f"{name}: INT8 scale must be finite and positive")
+                            raise ValueError(f"{name}: integer scale must be finite and positive")
                         weight = weight.float() * scale.reshape(-1, 1)
                     else:
                         dual = read(prefix + "weight_dual_scale") if scheme == _MX4 else None
                         weight = reconstruct_mx_weight(weight, scale, dual)
-                elif not dequantize and scheme not in {"FLOAT", _INT8}:
+                elif not dequantize and scheme not in {"FLOAT", _INT8, _INT4}:
                     raise ValueError(
                         "native MX loading is unavailable for this delivery; select execution_mode='dequantize'"
                     )
@@ -227,12 +309,28 @@ def resolve_offline_components(
         return {}, False
     if not isinstance(config, Mapping):
         raise ValueError("offline_quantization must be a mapping")
-    unknown = set(config) - {"path", "components", "execution_mode"}
+    unknown = set(config) - {"path", "components", "execution_mode", "format_paths"}
     if unknown:
         raise ValueError(f"unknown offline_quantization options: {sorted(unknown)}")
-    mode = config.get("execution_mode", "native")
-    if mode not in {"native", "dequantize", "native_mx"}:
-        raise ValueError("offline execution_mode must be native, dequantize, or native_mx")
+    mode = config.get("execution_mode", "native_auto")
+    if mode not in {"native", "native_auto", "dequantize", "native_mx", "native_int"}:
+        raise ValueError("offline execution_mode must be native_auto, native_mx, native_int, or dequantize")
+    if mode != "dequantize":
+        family = resolve_npu_quant_family()
+        if mode in {"native", "native_auto"}:
+            mode = "native_" + family
+        elif mode != "native_" + family:
+            raise ValueError(f"{mode} is incompatible with this NPU (requires {family} weights)")
+    if "format_paths" in config:
+        if "path" in config or "components" in config or mode == "dequantize":
+            raise ValueError("format_paths requires native execution and cannot combine with path/components")
+        choices = config["format_paths"]
+        if not isinstance(choices, Mapping) or set(choices) - {"mx", "int"}:
+            raise ValueError("format_paths must map mx/int to path or components")
+        selected = choices.get(family)
+        if not isinstance(selected, Mapping) or not selected or set(selected) - {"path", "components"}:
+            raise ValueError(f"format_paths lacks a valid {family} checkpoint selection")
+        config = dict(selected, execution_mode=mode)
     if "path" in config and "components" in config:
         raise ValueError("specify offline path or components, not both")
     paths: dict[str, str | Path]
@@ -256,16 +354,16 @@ def resolve_offline_components(
     checkpoints = {name: OfflineComponentCheckpoint(path) for name, path in paths.items()}
     for checkpoint in checkpoints.values():
         checkpoint.execution_mode = str(mode)
-    if mode == "native_mx":
-        if any(not checkpoint.schemes <= {_MX8, _MX4} for checkpoint in checkpoints.values()):
-            raise ValueError("native MX execution requires MXFP8/MXFP4 component checkpoints")
-    if mode == "native" and any(checkpoint.schemes != {_INT8} for checkpoint in checkpoints.values()):
-        raise ValueError("delivery contains MX weights, not INT8; use execution_mode='dequantize' explicitly")
-    if mode == "native" and set(checkpoints) != {"transformer"}:
-        raise ValueError("native INT8 currently supports the H3 transformer; VAE loading requires dequantize mode")
-    # Native MX converts the delivery representation once during loading, after
-    # applying every original scale. Runtime weights and activations stay MX.
-    return checkpoints, mode != "native"
+    expected = _MX_SCHEMES if mode == "native_mx" else _INT_SCHEMES
+    if mode != "dequantize" and any(not checkpoint.schemes <= expected for checkpoint in checkpoints.values()):
+        raise ValueError(
+            f"{mode} requires "
+            + ("MXFP8/MXFP4" if mode == "native_mx" else "dynamic INT4/INT8")
+            + " component checkpoints; format conversion is never implicit"
+        )
+    # MX uses the existing explicit load-time reconstruction/re-encoding.
+    # Integer loading retains exact codes/scales through TP and fused mappings.
+    return checkpoints, mode != "native_int"
 
 
 def load_offline_vae_weights(model: torch.nn.Module, checkpoint: OfflineComponentCheckpoint) -> None:
@@ -274,6 +372,19 @@ def load_offline_vae_weights(model: torch.nn.Module, checkpoint: OfflineComponen
     loaded: set[str] = set()
     with torch.no_grad():
         for name, weight in checkpoint.iter_weights(dequantize=True):
+            if name.endswith(".weight_quantizer.bias"):
+                # ModelSlim can serialize the same floating bias twice. Only
+                # discard this known alias when its canonical bias is present
+                # and identical; never mask an unknown or conflicting tensor.
+                canonical = name.removesuffix("weight_quantizer.bias") + "bias"
+                spec = checkpoint.tensors.get(canonical)
+                if spec is None or canonical not in state:
+                    raise ValueError(f"offline VAE bias alias lacks canonical target: {name}")
+                with safe_open(str(spec.file), framework="pt", device="cpu") as reader:
+                    bias = reader.get_tensor(canonical)
+                if weight.dtype != bias.dtype or weight.shape != bias.shape or not torch.equal(weight, bias):
+                    raise ValueError(f"offline VAE bias alias conflicts with canonical tensor: {name}")
+                continue
             if name not in state and name.endswith((".weight_g", ".weight_v")):
                 # PyTorch's parametrized weight_norm accepts the legacy g/v
                 # names through load_state_dict hooks. Mirror that naming

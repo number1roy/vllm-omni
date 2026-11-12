@@ -210,16 +210,31 @@ split into native low-bit GEMMs. VAE overrides replace only the delivery's
 quantized `nn.Linear` layers. Convolutions, attention, normalization, and
 other FLOAT operations retain their usual precision.
 
+The native Linear interface accepts FP16, BF16, or FP32 activations and returns
+that same floating dtype. Its uint8 weight dtype describes packed storage;
+it must not be used as an activation dtype. The VAE adapter handles checkpoint
+dtype helpers and audio encoder QKV calls that otherwise bypass this interface.
+Restoring a floating output dtype does not recover precision lost to quantization.
+
 Runtime weights and E8M0 scales use ordinary contiguous byte parameters,
 including packed FP4 bytes, so DLO can transport them without changing their
-bits. Hardware kernel compatibility, full generation, and quality must be
+bits. The adapter rebases FP4 weight views with nonzero storage offsets before
+native dispatch. This copies at most one output chunk and preserves the packed
+bytes; it does not reconstruct floating weights during inference. This also
+applies to later chunks of a wide projection, even without DLO.
+Hardware kernel compatibility, full generation, and quality must be
 validated for the specific runtime and checkpoint; selecting the mode alone
 is not a validation result.
 
 VAE overrides require both encoder and decoder enabled. VAE loading currently
 constructs the original component before replacing its state, so the original
 VAE checkpoint must remain available. Explicit `components` paths can select
-only the desired overrides. Offline overrides currently require a standalone
+only the desired overrides. A ModelSlim `*.weight_quantizer.bias` duplicate is
+accepted only when its canonical `*.bias` exists in both the checkpoint and
+model, with identical dtype, shape, and values. Conflicting or orphan aliases
+and other unknown tensors are rejected.
+
+Offline overrides currently require a standalone
 native partition without HSDP, host weight runtime, LoRA/fused adapters,
 replacement VAE decoders, or a combined FL2VA/Ref2VA model. Direct DLO checkpoint
 mmap is bypassed so reconstruction and strict format checks cannot be skipped.

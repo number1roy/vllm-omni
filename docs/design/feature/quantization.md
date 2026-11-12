@@ -167,6 +167,15 @@ MXFP8 uses W8A8 and dual-scale FP4 uses native single-scale W4A4. Runtime
 activation quantization and GEMM use Ascend MX operators without a floating
 GEMM fallback. Plain uint8 weight/scale parameters preserve their bytes through
 DLO; packed FP4 does not use the incompatible dual-level/NZ representation.
+Before native dispatch, FP4 weight views with nonzero storage offsets are
+copied into a zero-offset buffer, bounded to one output chunk. DLO buffers
+and wide AdaLN slices can otherwise expose incorrect packed-FP4 addressing;
+contiguity alone does not establish a zero storage offset.
+Native Linear inputs and outputs remain FP16, BF16, or FP32. Checkpoint VAE
+dtype helpers must not cast activations to the packed weight's uint8 dtype;
+the adapter dispatches native layers without that cast and rejects integer
+activations. Audio encoder attention routes QKV through the native module,
+then adds the checkpoint's separate Q/K/V biases once before floating attention.
 The conversion may introduce error and requires hardware and quality validation.
 Custom component readers
 bypass direct checkpoint mmap; HSDP and host weight runtime are rejected for

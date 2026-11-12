@@ -9,6 +9,9 @@ weights once to native single-scale MX. No floating GEMM fallback is used.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from functools import wraps
+from types import MethodType
 from typing import TYPE_CHECKING
 
 import torch
@@ -31,9 +34,9 @@ _EXECUTED_BITS: set[int] = set()
 
 
 def _target_bits(scheme: str) -> int | None:
-    if scheme == _MX4:
+    if scheme in {_MX4, "W4A4_DYNAMIC"}:
         return 4
-    return 8 if scheme == _MX8 else None
+    return 8 if scheme in {_MX8, "W8A8_DYNAMIC"} else None
 
 
 @torch.no_grad()
@@ -43,7 +46,10 @@ def quantize_mx_weight(weight: torch.Tensor, bits: int, device: torch.device) ->
 
     if device.type != "npu" or bits not in (4, 8):
         raise ValueError("H3 native MX requires an NPU and bits=4 or bits=8")
-    if weight.ndim != 2 or not torch.isfinite(weight).all():
+    from .offline_quantization import require_native_family
+
+    require_native_family("mx", device)
+    if weight.ndim != 2 or min(weight.shape) <= 0 or not torch.isfinite(weight).all():
         raise ValueError("native MX weight must be a finite matrix")
     padded_k = (weight.shape[1] + 63) // 64 * 64
     dtype = torch_npu.float4_e2m1fn_x2 if bits == 4 else torch_npu.float8_e4m3fn
@@ -63,10 +69,30 @@ def native_mx_linear(
     x: torch.Tensor, weight: torch.Tensor, scale: torch.Tensor, bits: int, bias: torch.Tensor | None
 ) -> torch.Tensor:
     """Dynamic MX activations and native low-bit GEMM, including wide H3 AdaLN."""
+    if x.dtype not in (torch.float16, torch.bfloat16, torch.float32):
+        raise ValueError(
+            "native MX activations must be FP16, BF16, or FP32; packed weight dtype is not an activation dtype"
+        )
+
     import torch_npu
 
     if x.device.type != "npu" or weight.device != x.device or scale.device != x.device:
         raise ValueError("native MX inputs, weight, and scale must reside on the same NPU")
+    from .offline_quantization import require_native_family
+
+    require_native_family("mx", x.device)
+    if bits not in (4, 8) or x.ndim < 1 or weight.ndim != 2 or weight.dtype != torch.uint8:
+        raise ValueError("native MX requires bits=4/8, byte matrix storage, and a floating activation")
+    if scale.dtype != torch.uint8 or scale.shape != (
+        weight.shape[0],
+        (weight.shape[1] * (2 if bits == 4 else 1)) // 64,
+        2,
+    ):
+        raise ValueError("native MX scale layout must match weight output rows and K groups")
+    if bias is not None and (
+        bias.shape != (weight.shape[0],) or not bias.is_floating_point() or bias.device != x.device
+    ):
+        raise ValueError("native MX bias must match floating output channels on the same NPU")
     shape, output_dtype = x.shape, x.dtype
     padded_k = weight.shape[1] * (2 if bits == 4 else 1)
     if shape[-1] > padded_k:
@@ -80,7 +106,13 @@ def native_mx_linear(
     outputs = []
     for offset in range(0, weight.shape[0], _OUTPUT_CHUNK):
         w = weight[offset : offset + _OUTPUT_CHUNK]
-        if bits == 8:
+        if bits == 4 and w.storage_offset() != 0:
+            # The FP4 override reinterprets uint8 storage offsets in nibble
+            # units. Rebase DLO views and later AdaLN chunks before dispatch;
+            # contiguous() can return the same view with its nonzero offset.
+            # Copy at most one output chunk, keeping native low-bit compute.
+            w = w.clone()
+        elif bits == 8:
             w = w.view(torch.float8_e4m3fn)
         # Keep BF16 output for the documented native MX kernel contract. Audio
         # VAE's public FP32 boundary is restored after the low-bit multiply.
@@ -115,7 +147,11 @@ def native_mx_linear(
 
 
 class NativeMXLinear(nn.Module):
-    """VAE Linear with byte parameters unaffected by outer FP32 dtype casts."""
+    """VAE Linear with byte storage and a floating input/output contract.
+
+    ``weight.dtype`` describes packed storage, never the activation dtype.
+    Checkpoint callers that inspect it must use the adapter installed below.
+    """
 
     def __init__(self, linear: nn.Linear, bits: int, device: torch.device) -> None:
         super().__init__()
@@ -127,7 +163,70 @@ class NativeMXLinear(nn.Module):
         self.register_parameter("bias", linear.bias)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if x.ndim < 1 or x.shape[-1] != self.in_features:
+            raise ValueError("native MX input does not match logical Linear width")
         return native_mx_linear(x, self.weight, self.weight_scale, self.bits, self.bias)
+
+
+def _with_native_mx_activation_dtype(original: Callable[..., torch.Tensor]) -> Callable[..., torch.Tensor]:
+    @wraps(original)
+    def linear_with_module_dtype(
+        linear: nn.Module, tensor: torch.Tensor, out_dtype: torch.dtype | None = None
+    ) -> torch.Tensor:
+        if not isinstance(linear, NativeMXLinear):
+            return original(linear, tensor, out_dtype)
+        # Do not infer activation precision from uint8 MX weight storage. The
+        # cast must be avoided here: converting back inside forward is too late.
+        output = linear(tensor)
+        return output if out_dtype is None else output.to(out_dtype)
+
+    setattr(linear_with_module_dtype, "_h3_native_mx_activation_aware", True)
+    return linear_with_module_dtype
+
+
+def _native_mx_causal_attention(self: nn.Module, x: torch.Tensor) -> torch.Tensor:
+    """Checkpoint audio attention, routing QKV through the native module.
+
+    The checkpoint uses F.linear(qkv.weight, external_bias), bypassing forward.
+    Its QKV has no internal bias; apply its separate Q/K/V biases exactly once.
+    Attention itself and the checkpoint's head reduction remain floating point.
+    """
+    batch, sequence, _ = x.shape
+    qkv = self.qkv(x)
+    bias = torch.cat((self.q_bias, self.zero_k_bias, self.v_bias))
+    qkv = qkv + bias.to(dtype=qkv.dtype)
+    q, k, v = qkv.reshape(batch, sequence, 3, self.num_heads, self.head_dim).permute(2, 0, 3, 1, 4).unbind(0)
+    x = nn.functional.scaled_dot_product_attention(q, k, v, attn_mask=None, dropout_p=0.0, is_causal=True)
+    if self.in_dim > self.out_dim:
+        x = torch.mean(x, dim=1)
+        if self.in_dim // self.num_heads != self.out_dim:
+            x = nn.functional.adaptive_avg_pool1d(x, self.out_dim)
+    else:
+        x = x.transpose(1, 2).reshape(batch, sequence, -1)
+    return self.proj(x)
+
+
+def _install_native_mx_vae_callers(model: nn.Module) -> None:
+    for module in model.modules():
+        # Remote video VAE functions share their checkpoint module namespace.
+        # Dispatch only NativeMXLinear differently; floating models using that
+        # same namespace still delegate to the original helper unchanged.
+        namespace = getattr(type(module).forward, "__globals__", {})
+        helper = namespace.get("_linear_with_module_dtype")
+        if callable(helper) and not getattr(helper, "_h3_native_mx_activation_aware", False):
+            namespace["_linear_with_module_dtype"] = _with_native_mx_activation_dtype(helper)
+
+        qkv = getattr(module, "qkv", None)
+        if not isinstance(qkv, NativeMXLinear) or not hasattr(module, "q_bias"):
+            continue
+        required = ("zero_k_bias", "v_bias", "in_dim", "out_dim", "num_heads", "head_dim", "proj")
+        if not all(hasattr(module, attr) for attr in required) or qkv.bias is not None:
+            raise ValueError(
+                "unsupported native MX audio attention contract: expected bias-free QKV and external biases"
+            )
+        if qkv.in_features != module.in_dim or qkv.out_features != 3 * module.num_heads * module.head_dim:
+            raise ValueError("unsupported native MX audio attention QKV shape")
+        module.forward = MethodType(_native_mx_causal_attention, module)
 
 
 def install_native_mx_vae(model: nn.Module, checkpoint: OfflineComponentCheckpoint, device: torch.device) -> int:
@@ -147,6 +246,8 @@ def install_native_mx_vae(model: nn.Module, checkpoint: OfflineComponentCheckpoi
         parent = model.get_submodule(parent_path) if parent_path else model
         setattr(parent, child, NativeMXLinear(linear, bits, device))
         count += 1
+    if count:
+        _install_native_mx_vae_callers(model)
     logger.info("Installed H3 native MX VAE mode=%s matrices=%d", checkpoint.execution_mode, count)
     return count
 
@@ -190,11 +291,15 @@ class NativeMXLinearMethod(LazyWeightMixin, LinearMethodBase):
         layer._already_called_process_weights_after_loading = True
 
     def apply(self, layer: nn.Module, x: torch.Tensor, bias: torch.Tensor | None = None) -> torch.Tensor:
+        if x.ndim < 1 or x.shape[-1] != layer.input_size_per_partition:
+            raise ValueError("native MX input does not match logical TP width")
         return native_mx_linear(x, layer.weight, layer.weight_scale, self.bits, bias)
 
 
 class H3NativeMXConfig(QuantizationConfig):
     """Delivery-driven model-local MX config; no global quantization override."""
+
+    delivery_schemes = {_MX4, _MX8}
 
     def __init__(self, targets: dict[str, int]) -> None:
         super().__init__()
@@ -248,7 +353,11 @@ class H3NativeMXConfig(QuantizationConfig):
                 if target is None:
                     raise ValueError(f"unsupported native MX H3 projection: {module}")
                 module = target[0]
-            schemes.setdefault(module, set()).add(checkpoint.description.get(name, "FLOAT"))
+            scheme = checkpoint.description.get(name, "FLOAT")
+            allowed = cls.delivery_schemes
+            if scheme != "FLOAT" and scheme not in allowed:
+                raise ValueError(f"{cls.__name__} incompatible delivery format: {scheme}")
+            schemes.setdefault(module, set()).add(scheme)
         targets = {}
         for name, values in schemes.items():
             if len(values) != 1:

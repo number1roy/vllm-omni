@@ -1179,56 +1179,27 @@ class MiniMaxH3Pipeline(
             "transformer",
         )
         offline_transformer = self._offline_checkpoints.get("transformer")
-        native_mx = any(checkpoint.execution_mode == "native_mx" for checkpoint in self._offline_checkpoints.values())
+        native_lowbit = any(
+            checkpoint.execution_mode in {"native_mx", "native_int"}
+            for checkpoint in self._offline_checkpoints.values()
+        )
         if self._offline_checkpoints:
-            from vllm_omni.quantization.int8_config import DiffusionInt8Config
-
-            if native_mx:
-                if transformer_quant_config is not None or od_config.quantization_config is not None:
-                    raise ValueError("offline native MX selects quantization from delivery metadata; remove overrides")
+            if native_lowbit:
+                if od_config.quantization_config is not None:
+                    raise ValueError("offline native quantization selects the NPU/weight format; remove overrides")
                 if offline_transformer is not None:
+                    from .native_int import H3NativeIntConfig
                     from .native_mx import H3NativeMXConfig
 
-                    transformer_quant_config = H3NativeMXConfig.from_checkpoint(offline_transformer)
-            elif self._offline_dequantize:
-                if transformer_quant_config is not None:
-                    raise ValueError("offline dequantize mode requires transformer quantization_config=None")
-            elif not isinstance(transformer_quant_config, DiffusionInt8Config) or not (
-                transformer_quant_config.is_checkpoint_int8_serialized
-            ):
-                raise ValueError("offline native INT8 requires method='int8', is_checkpoint_int8_serialized=True")
-            elif (
-                self.load_text_encoder
-                and _resolve_component_quant_config(od_config.quantization_config, "text_encoder") is not None
-            ):
-                raise ValueError(
-                    "offline INT8 must be scoped to transformer; set text_encoder/default quantization to None"
-                )
+                    factory = (
+                        H3NativeIntConfig if offline_transformer.execution_mode == "native_int" else H3NativeMXConfig
+                    )
+                    transformer_quant_config = factory.from_checkpoint(offline_transformer)
+            elif transformer_quant_config is not None:
+                raise ValueError("offline dequantize mode requires transformer quantization_config=None")
             if modular or ref2va_model_path is not None or control_path:
                 raise ValueError("offline component overrides currently require a standalone native H3 partition")
         if offline_transformer is not None:
-            if not self._offline_dequantize:
-                from .fasth3 import _resolve_native_target
-
-                schemes_by_target: dict[str, set[str]] = {}
-                for name in offline_transformer.tensors:
-                    if not name.endswith(".weight"):
-                        continue
-                    module = name.removesuffix(".weight")
-                    if offline_transformer.diffusers_weights:
-                        target = _resolve_native_target(module)
-                        if target is None:
-                            raise ValueError(f"unsupported offline H3 module: {module}")
-                        module = target[0]
-                    schemes_by_target.setdefault(module, set()).add(offline_transformer.description.get(name, "FLOAT"))
-                if mixed := [name for name, schemes in schemes_by_target.items() if len(schemes) != 1]:
-                    raise ValueError(f"offline fused H3 projections must use one scheme: {mixed}")
-                ignored = [name for name, schemes in schemes_by_target.items() if schemes == {"FLOAT"}]
-                transformer_quant_config = DiffusionInt8Config(
-                    is_checkpoint_int8_serialized=True,
-                    activation_scheme=transformer_quant_config.activation_scheme,
-                    ignored_layers=sorted(set(transformer_quant_config.ignored_layers) | set(ignored)),
-                )
             self.weights_sources[0] = DiffusersPipelineLoader.ComponentSource(
                 model_or_path=str(offline_transformer.path),
                 subfolder=None,
@@ -1273,7 +1244,7 @@ class MiniMaxH3Pipeline(
         )
         if offline_transformer is not None:
             self.transformer._strict_offline_loading = True
-            if native_mx:
+            if native_lowbit:
                 transformer_quant_config.validate_model_targets(self.transformer)
         if self._fasth3_checkpoint is not None:
             spec = self._fasth3_checkpoint
