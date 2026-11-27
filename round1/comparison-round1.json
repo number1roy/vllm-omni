@@ -1,0 +1,671 @@
+{
+  "verdict": "failed",
+  "errors": [
+    "short-mono-24k.wav/head-ablation/stage: decoder guardrail fails (SNR=60.51408500764361, max abs=0.004239916801452637)",
+    "short-mono-24k.wav/head-ablation/both: decoder guardrail fails (SNR=60.51408500764361, max abs=0.004239916801452637)"
+  ],
+  "cases": {
+    "short-mono-24k.wav": {
+      "input_sha256": "ce7e349e4385de65fc555218deb8db9dd6385777ddd956b477d98cc3402f342b",
+      "input_shape": [
+        1,
+        19200
+      ],
+      "input_rate": 24000,
+      "encoder_shape": [
+        64,
+        32
+      ],
+      "encoder_frames": 32,
+      "encode_reference": {
+        "bytes": 8192,
+        "md5": "a2173889296c9afade028560ff361c00",
+        "sha256": "2833af14b668ee789d4bb622417e134a5a4a392d5e5232d365b1116a1d1a660a"
+      },
+      "wave_shape": [
+        25600,
+        2
+      ],
+      "wave_rate": 32000,
+      "wave_duration_s": 0.8,
+      "runs": {
+        "main-before": {
+          "encoder_dumps": {
+            "encode-0.f32": {
+              "bytes": 8192,
+              "md5": "a2173889296c9afade028560ff361c00",
+              "sha256": "2833af14b668ee789d4bb622417e134a5a4a392d5e5232d365b1116a1d1a660a"
+            },
+            "encode-1.f32": {
+              "bytes": 8192,
+              "md5": "a2173889296c9afade028560ff361c00",
+              "sha256": "2833af14b668ee789d4bb622417e134a5a4a392d5e5232d365b1116a1d1a660a"
+            },
+            "encode-only.f32": {
+              "bytes": 8192,
+              "md5": "a2173889296c9afade028560ff361c00",
+              "sha256": "2833af14b668ee789d4bb622417e134a5a4a392d5e5232d365b1116a1d1a660a"
+            }
+          },
+          "decode": {
+            "off": {
+              "exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "snr_db": null,
+              "wav": {
+                "bytes": 204888,
+                "md5": "645d6584249732ac663700e8c7e99106",
+                "sha256": "6907243e794dd3d1400735d356fa5b381d88a3535f51307ef46d4b977d63ad33"
+              },
+              "fp32_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+              "sample_s": [
+                0.18499761633574963,
+                0.18506447412073612,
+                0.18502212315797806,
+                0.1850298661738634,
+                0.18501470237970352
+              ],
+              "median_s": 0.18502212315797806,
+              "mean_s": 0.18502575643360614,
+              "sample_stddev_s": 2.471440454736467e-05,
+              "fir_calls": [
+                0
+              ],
+              "fir_fallbacks": [
+                0
+              ],
+              "stage_calls": [
+                0
+              ],
+              "peak_allocated_bytes": 676265472,
+              "peak_reserved_bytes": 847249408
+            }
+          }
+        },
+        "head-default": {
+          "encoder_dumps": {
+            "encode-0.f32": {
+              "bytes": 8192,
+              "md5": "a2173889296c9afade028560ff361c00",
+              "sha256": "2833af14b668ee789d4bb622417e134a5a4a392d5e5232d365b1116a1d1a660a"
+            },
+            "encode-1.f32": {
+              "bytes": 8192,
+              "md5": "a2173889296c9afade028560ff361c00",
+              "sha256": "2833af14b668ee789d4bb622417e134a5a4a392d5e5232d365b1116a1d1a660a"
+            }
+          },
+          "decode": {
+            "off": {
+              "exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "snr_db": null,
+              "wav": {
+                "bytes": 204888,
+                "md5": "a5a3a9efdb7b18d69b3aad55cacd3bb9",
+                "sha256": "0077413c407104791250d632880e818380af3c345f3f4746c58faac1bf763ed3"
+              },
+              "fp32_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+              "sample_s": [
+                0.18515191040933132,
+                0.1852106638252735,
+                0.18505352549254894,
+                0.1850465126335621,
+                0.18510386906564236
+              ],
+              "median_s": 0.18510386906564236,
+              "mean_s": 0.18511329628527165,
+              "sample_stddev_s": 6.908864720635028e-05,
+              "fir_calls": [
+                0
+              ],
+              "fir_fallbacks": [
+                0
+              ],
+              "stage_calls": [
+                0
+              ],
+              "peak_allocated_bytes": 676265472,
+              "peak_reserved_bytes": 847249408
+            }
+          }
+        },
+        "head-ablation": {
+          "encoder_dumps": {
+            "encode-0.f32": {
+              "bytes": 8192,
+              "md5": "a2173889296c9afade028560ff361c00",
+              "sha256": "2833af14b668ee789d4bb622417e134a5a4a392d5e5232d365b1116a1d1a660a"
+            },
+            "encode-1.f32": {
+              "bytes": 8192,
+              "md5": "a2173889296c9afade028560ff361c00",
+              "sha256": "2833af14b668ee789d4bb622417e134a5a4a392d5e5232d365b1116a1d1a660a"
+            },
+            "encode-only.f32": {
+              "bytes": 8192,
+              "md5": "a2173889296c9afade028560ff361c00",
+              "sha256": "2833af14b668ee789d4bb622417e134a5a4a392d5e5232d365b1116a1d1a660a"
+            }
+          },
+          "decode": {
+            "off": {
+              "exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "snr_db": null,
+              "wav": {
+                "bytes": 204888,
+                "md5": "550a300a6e89efbfbc2a8d762cf5a2e2",
+                "sha256": "7e46e0c92c19b7cc107821dd5dd5374cf4464e54d2709792a840205fe3e9efdb"
+              },
+              "fp32_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+              "sample_s": [
+                0.1853583361953497,
+                0.18538512662053108,
+                0.1853151749819517,
+                0.1853055190294981,
+                0.1853025872260332
+              ],
+              "median_s": 0.1853151749819517,
+              "mean_s": 0.18533334881067276,
+              "sample_stddev_s": 3.659361572346033e-05,
+              "fir_calls": [
+                0
+              ],
+              "fir_fallbacks": [
+                0
+              ],
+              "stage_calls": [
+                0
+              ],
+              "peak_allocated_bytes": 681142272,
+              "peak_reserved_bytes": 851443712
+            },
+            "fir": {
+              "exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "snr_db": null,
+              "wav": {
+                "bytes": 204888,
+                "md5": "550a300a6e89efbfbc2a8d762cf5a2e2",
+                "sha256": "7e46e0c92c19b7cc107821dd5dd5374cf4464e54d2709792a840205fe3e9efdb"
+              },
+              "fp32_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+              "sample_s": [
+                0.04355873726308346,
+                0.04341472312808037,
+                0.04340239241719246,
+                0.043368980288505554,
+                0.043442102149128914
+              ],
+              "median_s": 0.04341472312808037,
+              "mean_s": 0.04343738704919815,
+              "sample_stddev_s": 7.274247224879685e-05,
+              "fir_calls": [
+                254
+              ],
+              "fir_fallbacks": [
+                0
+              ],
+              "stage_calls": [
+                0
+              ],
+              "peak_allocated_bytes": 681142272,
+              "peak_reserved_bytes": 851443712
+            },
+            "stage": {
+              "exact": false,
+              "max_abs": 0.004239916801452637,
+              "rmse": 0.00024216465692153795,
+              "snr_db": 60.51408500764361,
+              "wav": {
+                "bytes": 204888,
+                "md5": "b1db60e8c0cf5347692417b461dfc76c",
+                "sha256": "c4e003f43c54807f5ed2b09388ec187478c789d31a90854012bbee437d446ee7"
+              },
+              "fp32_sha256": "d40d51c01e09359f21c745b5128986474b59eee9c9a7594ddb70c5b4cc965859",
+              "sample_s": [
+                0.1902390420436859,
+                0.19014515541493893,
+                0.1901597213000059,
+                0.190146304666996,
+                0.1901653539389372
+              ],
+              "median_s": 0.1901597213000059,
+              "mean_s": 0.1901711154729128,
+              "sample_stddev_s": 3.8944005210130855e-05,
+              "fir_calls": [
+                0
+              ],
+              "fir_fallbacks": [
+                0
+              ],
+              "stage_calls": [
+                7
+              ],
+              "peak_allocated_bytes": 704884224,
+              "peak_reserved_bytes": 851443712
+            },
+            "both": {
+              "exact": false,
+              "max_abs": 0.004239916801452637,
+              "rmse": 0.00024216465692153795,
+              "snr_db": 60.51408500764361,
+              "wav": {
+                "bytes": 204888,
+                "md5": "b1db60e8c0cf5347692417b461dfc76c",
+                "sha256": "c4e003f43c54807f5ed2b09388ec187478c789d31a90854012bbee437d446ee7"
+              },
+              "fp32_sha256": "d40d51c01e09359f21c745b5128986474b59eee9c9a7594ddb70c5b4cc965859",
+              "sample_s": [
+                0.04834794066846371,
+                0.04826837778091431,
+                0.04828059673309326,
+                0.04832835495471954,
+                0.048242444172501564
+              ],
+              "median_s": 0.04828059673309326,
+              "mean_s": 0.048293542861938474,
+              "sample_stddev_s": 4.354010443187404e-05,
+              "fir_calls": [
+                254
+              ],
+              "fir_fallbacks": [
+                0
+              ],
+              "stage_calls": [
+                7
+              ],
+              "peak_allocated_bytes": 704884224,
+              "peak_reserved_bytes": 851443712
+            }
+          }
+        },
+        "main-after": {
+          "encoder_dumps": {
+            "encode-0.f32": {
+              "bytes": 8192,
+              "md5": "a2173889296c9afade028560ff361c00",
+              "sha256": "2833af14b668ee789d4bb622417e134a5a4a392d5e5232d365b1116a1d1a660a"
+            },
+            "encode-1.f32": {
+              "bytes": 8192,
+              "md5": "a2173889296c9afade028560ff361c00",
+              "sha256": "2833af14b668ee789d4bb622417e134a5a4a392d5e5232d365b1116a1d1a660a"
+            }
+          },
+          "decode": {
+            "off": {
+              "exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "snr_db": null,
+              "wav": {
+                "bytes": 204888,
+                "md5": "cf570f44ce2fe42c3a5cc1afd815321b",
+                "sha256": "7b301ec35fd3bc6087dca98f1ac5d86e2dcd6f367b7c45567531567cb9f4b421"
+              },
+              "fp32_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+              "sample_s": [
+                0.18508457764983177,
+                0.18516549840569496,
+                0.18506388738751411,
+                0.18499396927654743,
+                0.1848780009895563
+              ],
+              "median_s": 0.18506388738751411,
+              "mean_s": 0.18503718674182892,
+              "sample_stddev_s": 0.00010797055010205985,
+              "fir_calls": [
+                0
+              ],
+              "fir_fallbacks": [
+                0
+              ],
+              "stage_calls": [
+                0
+              ],
+              "peak_allocated_bytes": 676265472,
+              "peak_reserved_bytes": 847249408
+            }
+          }
+        }
+      }
+    },
+    "long-stereo-32k.wav": {
+      "input_sha256": "310e41f7094fbc9058d4566edbf43161ec7d4eec2d35111816ebbdd8b208a184",
+      "input_shape": [
+        2,
+        392000
+      ],
+      "input_rate": 32000,
+      "encoder_shape": [
+        980,
+        32
+      ],
+      "encoder_frames": 490,
+      "encode_reference": {
+        "bytes": 125440,
+        "md5": "4e851467af0fbd92a39e9b5728ebeaf1",
+        "sha256": "50acdae0bb7650e622ef7718440188b9dd9759c5449f997008b652a61d6dfbdd"
+      },
+      "wave_shape": [
+        392000,
+        2
+      ],
+      "wave_rate": 32000,
+      "wave_duration_s": 12.25,
+      "runs": {
+        "main-before": {
+          "encoder_dumps": {
+            "encode-0.f32": {
+              "bytes": 125440,
+              "md5": "4e851467af0fbd92a39e9b5728ebeaf1",
+              "sha256": "50acdae0bb7650e622ef7718440188b9dd9759c5449f997008b652a61d6dfbdd"
+            },
+            "encode-1.f32": {
+              "bytes": 125440,
+              "md5": "4e851467af0fbd92a39e9b5728ebeaf1",
+              "sha256": "50acdae0bb7650e622ef7718440188b9dd9759c5449f997008b652a61d6dfbdd"
+            },
+            "encode-only.f32": {
+              "bytes": 125440,
+              "md5": "4e851467af0fbd92a39e9b5728ebeaf1",
+              "sha256": "50acdae0bb7650e622ef7718440188b9dd9759c5449f997008b652a61d6dfbdd"
+            }
+          },
+          "decode": {
+            "off": {
+              "exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "snr_db": null,
+              "wav": {
+                "bytes": 3136088,
+                "md5": "e90e2341f84d8f8a4c48959dd0fad694",
+                "sha256": "3358280781825822660553ca6436825f9ff8a58ed0d0248090f69b8d15c9f7d2"
+              },
+              "fp32_sha256": "7c2224d84ed797e20ad990c4004dc0c86f7e31f73bb3b0a5c11fe072f91712f9",
+              "sample_s": [
+                2.4301909934729338,
+                2.4302241671830416,
+                2.4301481004804373,
+                2.430145248770714,
+                2.4302211087197065
+              ],
+              "median_s": 2.4301909934729338,
+              "mean_s": 2.4301859237253667,
+              "sample_stddev_s": 3.811593503714614e-05,
+              "fir_calls": [
+                0
+              ],
+              "fir_fallbacks": [
+                0
+              ],
+              "stage_calls": [
+                0
+              ],
+              "peak_allocated_bytes": 929133568,
+              "peak_reserved_bytes": 1853882368
+            }
+          }
+        },
+        "head-default": {
+          "encoder_dumps": {
+            "encode-0.f32": {
+              "bytes": 125440,
+              "md5": "4e851467af0fbd92a39e9b5728ebeaf1",
+              "sha256": "50acdae0bb7650e622ef7718440188b9dd9759c5449f997008b652a61d6dfbdd"
+            },
+            "encode-1.f32": {
+              "bytes": 125440,
+              "md5": "4e851467af0fbd92a39e9b5728ebeaf1",
+              "sha256": "50acdae0bb7650e622ef7718440188b9dd9759c5449f997008b652a61d6dfbdd"
+            }
+          },
+          "decode": {
+            "off": {
+              "exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "snr_db": null,
+              "wav": {
+                "bytes": 3136088,
+                "md5": "b49f06cd93b902920fa6f5941657ab67",
+                "sha256": "0062c611ccf5a48a2a7d8ee99451f170f42cffc5797f6b85377ab1afe9c611db"
+              },
+              "fp32_sha256": "7c2224d84ed797e20ad990c4004dc0c86f7e31f73bb3b0a5c11fe072f91712f9",
+              "sample_s": [
+                2.4301189966499805,
+                2.429969245567918,
+                2.4300130382180214,
+                2.4300566501915455,
+                2.4301990382373333
+              ],
+              "median_s": 2.4300566501915455,
+              "mean_s": 2.43007139377296,
+              "sample_stddev_s": 9.029969956239732e-05,
+              "fir_calls": [
+                0
+              ],
+              "fir_fallbacks": [
+                0
+              ],
+              "stage_calls": [
+                0
+              ],
+              "peak_allocated_bytes": 929133568,
+              "peak_reserved_bytes": 1853882368
+            }
+          }
+        },
+        "head-ablation": {
+          "encoder_dumps": {
+            "encode-0.f32": {
+              "bytes": 125440,
+              "md5": "4e851467af0fbd92a39e9b5728ebeaf1",
+              "sha256": "50acdae0bb7650e622ef7718440188b9dd9759c5449f997008b652a61d6dfbdd"
+            },
+            "encode-1.f32": {
+              "bytes": 125440,
+              "md5": "4e851467af0fbd92a39e9b5728ebeaf1",
+              "sha256": "50acdae0bb7650e622ef7718440188b9dd9759c5449f997008b652a61d6dfbdd"
+            },
+            "encode-only.f32": {
+              "bytes": 125440,
+              "md5": "4e851467af0fbd92a39e9b5728ebeaf1",
+              "sha256": "50acdae0bb7650e622ef7718440188b9dd9759c5449f997008b652a61d6dfbdd"
+            }
+          },
+          "decode": {
+            "off": {
+              "exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "snr_db": null,
+              "wav": {
+                "bytes": 3136088,
+                "md5": "2529019ec88179b5e40acbcda1443176",
+                "sha256": "bae4c36e0d72c8268dfa9c1e5f6840f15f1cc12cd8961ee25a60b6f12c749e44"
+              },
+              "fp32_sha256": "7c2224d84ed797e20ad990c4004dc0c86f7e31f73bb3b0a5c11fe072f91712f9",
+              "sample_s": [
+                2.4300842117518187,
+                2.4304495751857758,
+                2.4305569883435965,
+                2.430875713005662,
+                2.4305175896734
+              ],
+              "median_s": 2.4305175896734,
+              "mean_s": 2.4304968155920506,
+              "sample_stddev_s": 0.00028288211214437384,
+              "fir_calls": [
+                0
+              ],
+              "fir_fallbacks": [
+                0
+              ],
+              "stage_calls": [
+                0
+              ],
+              "peak_allocated_bytes": 934010368,
+              "peak_reserved_bytes": 1858076672
+            },
+            "fir": {
+              "exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "snr_db": null,
+              "wav": {
+                "bytes": 3136088,
+                "md5": "5a0df196e6497afc77214263f9ca3475",
+                "sha256": "6c003df6334cf858adf91ff70989a02fabf74625b6c0d1aac98d37589056b75b"
+              },
+              "fp32_sha256": "7c2224d84ed797e20ad990c4004dc0c86f7e31f73bb3b0a5c11fe072f91712f9",
+              "sample_s": [
+                0.2843248024582863,
+                0.28467218205332756,
+                0.2843109630048275,
+                0.2844451814889908,
+                0.2844911776483059
+              ],
+              "median_s": 0.2844451814889908,
+              "mean_s": 0.2844488613307476,
+              "sample_stddev_s": 0.00014669944549028138,
+              "fir_calls": [
+                254
+              ],
+              "fir_fallbacks": [
+                0
+              ],
+              "stage_calls": [
+                0
+              ],
+              "peak_allocated_bytes": 934501888,
+              "peak_reserved_bytes": 1858076672
+            },
+            "stage": {
+              "exact": false,
+              "max_abs": 9.268522262573242e-05,
+              "rmse": 1.0051132119432417e-05,
+              "snr_db": 76.90202401133374,
+              "wav": {
+                "bytes": 3136088,
+                "md5": "c59799a27e85090877b67abe639dd51b",
+                "sha256": "412c3181ad5ed683f5007d272e6ad9df22621b26eedbbef670f24346ab4d0e42"
+              },
+              "fp32_sha256": "31b8b18ea1792c09d37362aae7da9ccb87b80ccfd848467b2c1fcc622498dfd9",
+              "sample_s": [
+                2.3452055640518665,
+                2.345181968063116,
+                2.3451839704066515,
+                2.345202201977372,
+                2.3452691826969385
+              ],
+              "median_s": 2.345202201977372,
+              "mean_s": 2.345208577439189,
+              "sample_stddev_s": 3.548340890018304e-05,
+              "fir_calls": [
+                0
+              ],
+              "fir_fallbacks": [
+                0
+              ],
+              "stage_calls": [
+                7
+              ],
+              "peak_allocated_bytes": 934010368,
+              "peak_reserved_bytes": 1858076672
+            },
+            "both": {
+              "exact": false,
+              "max_abs": 9.268522262573242e-05,
+              "rmse": 1.0051132119432417e-05,
+              "snr_db": 76.90202401133374,
+              "wav": {
+                "bytes": 3136088,
+                "md5": "81514aa92a9cb8cb92a6d794974b02d4",
+                "sha256": "58feae6967288a8b57558df6ef524a463b9f48c1d9f79eb08fe72748849ac01f"
+              },
+              "fp32_sha256": "31b8b18ea1792c09d37362aae7da9ccb87b80ccfd848467b2c1fcc622498dfd9",
+              "sample_s": [
+                0.19924446195363998,
+                0.19959485530853271,
+                0.19929121807217598,
+                0.19948536902666092,
+                0.1993460152298212
+              ],
+              "median_s": 0.1993460152298212,
+              "mean_s": 0.19939238391816616,
+              "sample_stddev_s": 0.00014483299482660335,
+              "fir_calls": [
+                254
+              ],
+              "fir_fallbacks": [
+                0
+              ],
+              "stage_calls": [
+                7
+              ],
+              "peak_allocated_bytes": 934501888,
+              "peak_reserved_bytes": 1858076672
+            }
+          }
+        },
+        "main-after": {
+          "encoder_dumps": {
+            "encode-0.f32": {
+              "bytes": 125440,
+              "md5": "4e851467af0fbd92a39e9b5728ebeaf1",
+              "sha256": "50acdae0bb7650e622ef7718440188b9dd9759c5449f997008b652a61d6dfbdd"
+            },
+            "encode-1.f32": {
+              "bytes": 125440,
+              "md5": "4e851467af0fbd92a39e9b5728ebeaf1",
+              "sha256": "50acdae0bb7650e622ef7718440188b9dd9759c5449f997008b652a61d6dfbdd"
+            }
+          },
+          "decode": {
+            "off": {
+              "exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "snr_db": null,
+              "wav": {
+                "bytes": 3136088,
+                "md5": "17ca948ca56a9d72fa43d9cf8ec7844e",
+                "sha256": "9c52bcff6a24c202eb3190241b9848cdbf61a1c6cd39137a5c5979b66a0fc5f6"
+              },
+              "fp32_sha256": "7c2224d84ed797e20ad990c4004dc0c86f7e31f73bb3b0a5c11fe072f91712f9",
+              "sample_s": [
+                2.4299309961497784,
+                2.429749457165599,
+                2.429780362173915,
+                2.4296253453940153,
+                2.4296824913471937
+              ],
+              "median_s": 2.429749457165599,
+              "mean_s": 2.4297537304461003,
+              "sample_stddev_s": 0.00011587533210847994,
+              "fir_calls": [
+                0
+              ],
+              "fir_fallbacks": [
+                0
+              ],
+              "stage_calls": [
+                0
+              ],
+              "peak_allocated_bytes": 929133568,
+              "peak_reserved_bytes": 1853882368
+            }
+          }
+        }
+      }
+    }
+  }
+}

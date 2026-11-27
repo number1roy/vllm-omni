@@ -1,0 +1,5 @@
+	No process in device.
+uid=1000 pid=2418418 start_ticks=843879378 card=14 base=8be1f8d67fcf60d4898e3a0ca58f8aec7125c989 head=7680d408e4788cdf10e971262b636b8b69975c4e
+66b5815fbe43a09c5d3157ddd4d1db8b26ce826a68453d9f1537794f38103a87  /opt/tiger/liangbowen/session/2026-11-27-pr10253-implementation/checkout/benchmarks/diffusion/minimax_h3_audio_vae.py
+NPU_WINDOW_COMPLETE
+	No process in device.

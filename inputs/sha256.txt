@@ -1,0 +1,4 @@
+fb5c19ca084001ff12984cdb132d0263ad0546421afa987fd2cff4c1c7676148  /opt/tiger/liangbowen/benchmark/h3-pr10253-audio-opt-in-20261127/inputs/at-128-stereo-32k.wav
+d08051004f7da402613a2c7728cc057f76ed29ab3d24455cbc3a2bd75571f016  /opt/tiger/liangbowen/benchmark/h3-pr10253-audio-opt-in-20261127/inputs/below-127-stereo-32k.wav
+310e41f7094fbc9058d4566edbf43161ec7d4eec2d35111816ebbdd8b208a184  /opt/tiger/liangbowen/benchmark/h3-pr10253-audio-opt-in-20261127/inputs/long-stereo-32k.wav
+ce7e349e4385de65fc555218deb8db9dd6385777ddd956b477d98cc3402f342b  /opt/tiger/liangbowen/benchmark/h3-pr10253-audio-opt-in-20261127/inputs/short-mono-24k.wav

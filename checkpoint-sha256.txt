@@ -1,0 +1,2 @@
+37dddc2f3e6d5d5139d823d5ea283bbf304dadcb885b1ccda818aa13dade5ea2  /opt/tiger/models/minimax-h3-whole/Ref2VA/audio_vae/model.safetensors
+d8f3bcc62e23c7e9806970fa63cca6139c06faa3797cf9c94034f60db8512771  /opt/tiger/models/minimax-h3-whole/Ref2VA/audio_vae/config.json
