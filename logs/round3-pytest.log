@@ -1,0 +1,47 @@
+....................................................................ssss [  6%]
+....s...............................................s................... [ 13%]
+........................................................................ [ 19%]
+..........................................................s............. [ 26%]
+........................................................................ [ 32%]
+........................................................................ [ 39%]
+........................................................................ [ 45%]
+........................................................................ [ 52%]
+..........................................s......................xxxx... [ 59%]
+........................................................................ [ 65%]
+........................................................................ [ 72%]
+........................................................................ [ 78%]
+........................................................................ [ 85%]
+........................................................................ [ 91%]
+........................................................................ [ 98%]
+..................                                                       [100%]
+=============================== warnings summary ===============================
+../../../../../../tmp/h3-omni-nightly.BDf1yq/bundle/rootfs/usr/local/python3.12.13/lib/python3.12/site-packages/triton/language/extra/cann/extension/math_ops.py:13
+  /tmp/h3-omni-nightly.BDf1yq/bundle/rootfs/usr/local/python3.12.13/lib/python3.12/site-packages/triton/language/extra/cann/extension/math_ops.py:13: FutureWarning: triton.language.extra.cann.extension.atan2 is deprecated and will be removed in the next release; use triton.language.extra.cann.libdevice.atan2 instead.
+    @_deprecated(replacement="triton.language.extra.cann.libdevice.atan2")
+
+../../../../../../tmp/h3-omni-nightly.BDf1yq/bundle/rootfs/usr/local/python3.12.13/lib/python3.12/site-packages/triton/language/extra/cann/extension/math_ops.py:35
+  /tmp/h3-omni-nightly.BDf1yq/bundle/rootfs/usr/local/python3.12.13/lib/python3.12/site-packages/triton/language/extra/cann/extension/math_ops.py:35: FutureWarning: triton.language.extra.cann.extension.isfinited is deprecated and will be removed in the next release; use triton.language.extra.cann.libdevice.isfinited instead.
+    @_deprecated(replacement="triton.language.extra.cann.libdevice.isfinited")
+
+../../../../../../tmp/h3-omni-nightly.BDf1yq/bundle/rootfs/usr/local/python3.12.13/lib/python3.12/site-packages/triton/language/extra/cann/extension/math_ops.py:49
+  /tmp/h3-omni-nightly.BDf1yq/bundle/rootfs/usr/local/python3.12.13/lib/python3.12/site-packages/triton/language/extra/cann/extension/math_ops.py:49: FutureWarning: triton.language.extra.cann.extension.finitef is deprecated and will be removed in the next release; use triton.language.extra.cann.libdevice.finitef instead.
+    @_deprecated(replacement="triton.language.extra.cann.libdevice.finitef")
+
+vllm_omni/version.py:55
+  /opt/tiger/liangbowen/session/2026-11-27-pr10253-implementation/checkout/vllm_omni/version.py:55: RuntimeWarning: vLLM and vLLM-Omni appear to have mismatched major/minor versions:
+   --> vLLM-Omni version 0.26.1.dev0+g0e4b28f491721af618525f4ba9f679f0eb5a7157
+   --> vLLM version 0.34.0
+  This will likely cause compatibility issues.
+    warn_if_misaligned_vllm_version()
+
+../../../../../../tmp/h3-omni-nightly.BDf1yq/bundle/rootfs/usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /tmp/h3-omni-nightly.BDf1yq/bundle/rootfs/usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+tests/config/test_omni_config.py::test_from_pipeline_config_forwards_fastvideo_vsa_topk
+  /opt/tiger/liangbowen/session/2026-11-27-pr10253-implementation/checkout/vllm_omni/config/omni_config.py:1797: FutureWarning: Diffusion config field 'diffusion_attention_backend' is deprecated; use 'diffusion_attention_config'.
+    normalized = normalize_omni_diffusion_kwargs(mixed_kwargs)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+--- Running Summary
+1086 passed, 8 skipped, 4 xfailed, 19 warnings in 33.39s

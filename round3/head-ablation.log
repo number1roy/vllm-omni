@@ -1,0 +1,1459 @@
+/tmp/h3-omni-nightly.BDf1yq/bundle/rootfs/usr/local/python3.12.13/lib/python3.12/site-packages/triton/language/extra/cann/extension/math_ops.py:13: FutureWarning: triton.language.extra.cann.extension.atan2 is deprecated and will be removed in the next release; use triton.language.extra.cann.libdevice.atan2 instead.
+  @_deprecated(replacement="triton.language.extra.cann.libdevice.atan2")
+/tmp/h3-omni-nightly.BDf1yq/bundle/rootfs/usr/local/python3.12.13/lib/python3.12/site-packages/triton/language/extra/cann/extension/math_ops.py:35: FutureWarning: triton.language.extra.cann.extension.isfinited is deprecated and will be removed in the next release; use triton.language.extra.cann.libdevice.isfinited instead.
+  @_deprecated(replacement="triton.language.extra.cann.libdevice.isfinited")
+/tmp/h3-omni-nightly.BDf1yq/bundle/rootfs/usr/local/python3.12.13/lib/python3.12/site-packages/triton/language/extra/cann/extension/math_ops.py:49: FutureWarning: triton.language.extra.cann.extension.finitef is deprecated and will be removed in the next release; use triton.language.extra.cann.libdevice.finitef instead.
+  @_deprecated(replacement="triton.language.extra.cann.libdevice.finitef")
+/opt/tiger/liangbowen/session/2026-11-27-pr10253-implementation/checkout/vllm_omni/version.py:55: RuntimeWarning: vLLM and vLLM-Omni appear to have mismatched major/minor versions:
+ --> vLLM-Omni version 0.26.1.dev0+g0e4b28f491721af618525f4ba9f679f0eb5a7157
+ --> vLLM version 0.34.0
+This will likely cause compatibility issues.
+  warn_if_misaligned_vllm_version()
+[npu] contiguous KV patch not applied: No module named 'vllm_ascend.worker.v1'
+FlashInfer ring kernels are unavailable. Reason: No module named 'flashinfer'
+[W1127 15:39:17.978474770 NPUCachingAllocator.cpp:204] Warning: The current CANN and HDK(driver) versions require processing for 32 padding size, with memory allocation. (function operator())
+{
+  "source": "/opt/tiger/liangbowen/session/2026-11-27-pr10253-implementation/checkout/vllm_omni/diffusion/models/minimax_h3/vae.py",
+  "device": "Ascend910B4-1",
+  "torch": "2.10.0+cpu",
+  "torch_npu": "2.10.0.post7",
+  "hf32_conv": true,
+  "cases": {
+    "short-mono-24k.wav": {
+      "input_sha256": "ce7e349e4385de65fc555218deb8db9dd6385777ddd956b477d98cc3402f342b",
+      "input_sample_rate": 24000,
+      "input_shape": [
+        1,
+        19200
+      ],
+      "encode_shape": [
+        64,
+        32
+      ],
+      "encode_frames": 32,
+      "encode_sha256": [
+        "2833af14b668ee789d4bb622417e134a5a4a392d5e5232d365b1116a1d1a660a",
+        "2833af14b668ee789d4bb622417e134a5a4a392d5e5232d365b1116a1d1a660a"
+      ],
+      "output_sample_rate": 32000,
+      "fir_modules": 254,
+      "stage_modules": 7,
+      "decode": {
+        "off": [
+          {
+            "kind": "warmup",
+            "seconds": 28.736548271030188,
+            "peak_allocated_bytes": 680936960,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.18471966311335564,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.18492286279797554,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.18485881201922894,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+            "frames": 25600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.18477161042392254,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+            "frames": 25600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.18477551266551018,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+            "frames": 25600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.184727618470788,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+            "frames": 25600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.18475171364843845,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+            "frames": 25600
+          }
+        ],
+        "fir": [
+          {
+            "kind": "warmup",
+            "seconds": 0.7581550292670727,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.043107181787490845,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.043132804334163666,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.043241191655397415,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+            "frames": 25600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.043181587010622025,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+            "frames": 25600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.043073179200291634,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+            "frames": 25600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.04303056560456753,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+            "frames": 25600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.04317706823348999,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+            "frames": 25600
+          }
+        ],
+        "stage": [
+          {
+            "kind": "warmup",
+            "seconds": 0.18513277731835842,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.1849020142108202,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.18475076369941235,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.18483001366257668,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+            "frames": 25600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.18473112396895885,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+            "frames": 25600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.18470856361091137,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+            "frames": 25600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.18483729474246502,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+            "frames": 25600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.18488289415836334,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+            "frames": 25600
+          }
+        ],
+        "both": [
+          {
+            "kind": "warmup",
+            "seconds": 0.04313346743583679,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.04313662089407444,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.04316442459821701,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.04312613047659397,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+            "frames": 25600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.0430869460105896,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+            "frames": 25600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.04319767653942108,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+            "frames": 25600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.043036943301558495,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+            "frames": 25600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.04310419037938118,
+            "peak_allocated_bytes": 681142272,
+            "peak_reserved_bytes": 851443712,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "2ea6b4daec301fd20d5ba032633c3eeaa6dde7741f3b31c5a50e15802fc98278",
+            "frames": 25600
+          }
+        ]
+      },
+      "encode_only_sha256": "2833af14b668ee789d4bb622417e134a5a4a392d5e5232d365b1116a1d1a660a"
+    },
+    "below-127-stereo-32k.wav": {
+      "input_sha256": "d08051004f7da402613a2c7728cc057f76ed29ab3d24455cbc3a2bd75571f016",
+      "input_sample_rate": 32000,
+      "input_shape": [
+        2,
+        101600
+      ],
+      "encode_shape": [
+        254,
+        32
+      ],
+      "encode_frames": 127,
+      "encode_sha256": [
+        "4fed75bc26e52353907f29bbb66aacad4e934a57cd113757c184b2a643935728",
+        "4fed75bc26e52353907f29bbb66aacad4e934a57cd113757c184b2a643935728"
+      ],
+      "output_sample_rate": 32000,
+      "fir_modules": 254,
+      "stage_modules": 7,
+      "decode": {
+        "off": [
+          {
+            "kind": "warmup",
+            "seconds": 0.6522561442106962,
+            "peak_allocated_bytes": 701666816,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.6520023997873068,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.6521717458963394,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.6521537490189075,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "d6c5c2c2a1bb5a6f7c0118ce6dc64f3c007acec0ff7ae049b99fadca91626425",
+            "frames": 101600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.6521597616374493,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "d6c5c2c2a1bb5a6f7c0118ce6dc64f3c007acec0ff7ae049b99fadca91626425",
+            "frames": 101600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.6520886402577162,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "d6c5c2c2a1bb5a6f7c0118ce6dc64f3c007acec0ff7ae049b99fadca91626425",
+            "frames": 101600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.6521678641438484,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "d6c5c2c2a1bb5a6f7c0118ce6dc64f3c007acec0ff7ae049b99fadca91626425",
+            "frames": 101600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.6519075855612755,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "d6c5c2c2a1bb5a6f7c0118ce6dc64f3c007acec0ff7ae049b99fadca91626425",
+            "frames": 101600
+          }
+        ],
+        "fir": [
+          {
+            "kind": "warmup",
+            "seconds": 0.08957621641457081,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.08944202587008476,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.08947549760341644,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.0895625688135624,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "d6c5c2c2a1bb5a6f7c0118ce6dc64f3c007acec0ff7ae049b99fadca91626425",
+            "frames": 101600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.0894490722566843,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "d6c5c2c2a1bb5a6f7c0118ce6dc64f3c007acec0ff7ae049b99fadca91626425",
+            "frames": 101600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.08961988613009453,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "d6c5c2c2a1bb5a6f7c0118ce6dc64f3c007acec0ff7ae049b99fadca91626425",
+            "frames": 101600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.08950905874371529,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "d6c5c2c2a1bb5a6f7c0118ce6dc64f3c007acec0ff7ae049b99fadca91626425",
+            "frames": 101600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.08950883708894253,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "d6c5c2c2a1bb5a6f7c0118ce6dc64f3c007acec0ff7ae049b99fadca91626425",
+            "frames": 101600
+          }
+        ],
+        "stage": [
+          {
+            "kind": "warmup",
+            "seconds": 0.6520677655935287,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.652011189609766,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.6520489752292633,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.6521294228732586,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "d6c5c2c2a1bb5a6f7c0118ce6dc64f3c007acec0ff7ae049b99fadca91626425",
+            "frames": 101600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.6520526260137558,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "d6c5c2c2a1bb5a6f7c0118ce6dc64f3c007acec0ff7ae049b99fadca91626425",
+            "frames": 101600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.6520215608179569,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "d6c5c2c2a1bb5a6f7c0118ce6dc64f3c007acec0ff7ae049b99fadca91626425",
+            "frames": 101600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.6520692259073257,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "d6c5c2c2a1bb5a6f7c0118ce6dc64f3c007acec0ff7ae049b99fadca91626425",
+            "frames": 101600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.6519088689237833,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "d6c5c2c2a1bb5a6f7c0118ce6dc64f3c007acec0ff7ae049b99fadca91626425",
+            "frames": 101600
+          }
+        ],
+        "both": [
+          {
+            "kind": "warmup",
+            "seconds": 0.08956076391041279,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.08946745842695236,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.08948143012821674,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.08946298062801361,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "d6c5c2c2a1bb5a6f7c0118ce6dc64f3c007acec0ff7ae049b99fadca91626425",
+            "frames": 101600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.0894438587129116,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "d6c5c2c2a1bb5a6f7c0118ce6dc64f3c007acec0ff7ae049b99fadca91626425",
+            "frames": 101600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.08944877237081528,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "d6c5c2c2a1bb5a6f7c0118ce6dc64f3c007acec0ff7ae049b99fadca91626425",
+            "frames": 101600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.08938462845981121,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "d6c5c2c2a1bb5a6f7c0118ce6dc64f3c007acec0ff7ae049b99fadca91626425",
+            "frames": 101600
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.08941570296883583,
+            "peak_allocated_bytes": 702479872,
+            "peak_reserved_bytes": 1061158912,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "d6c5c2c2a1bb5a6f7c0118ce6dc64f3c007acec0ff7ae049b99fadca91626425",
+            "frames": 101600
+          }
+        ]
+      },
+      "encode_only_sha256": "4fed75bc26e52353907f29bbb66aacad4e934a57cd113757c184b2a643935728"
+    },
+    "at-128-stereo-32k.wav": {
+      "input_sha256": "fb5c19ca084001ff12984cdb132d0263ad0546421afa987fd2cff4c1c7676148",
+      "input_sample_rate": 32000,
+      "input_shape": [
+        2,
+        102400
+      ],
+      "encode_shape": [
+        256,
+        32
+      ],
+      "encode_frames": 128,
+      "encode_sha256": [
+        "bc391e8f717d66a37035d5a993b1f69c01d9170a2c45aa544e1c83059ef8f462",
+        "bc391e8f717d66a37035d5a993b1f69c01d9170a2c45aa544e1c83059ef8f462"
+      ],
+      "output_sample_rate": 32000,
+      "fir_modules": 254,
+      "stage_modules": 7,
+      "decode": {
+        "off": [
+          {
+            "kind": "warmup",
+            "seconds": 0.6524771340191364,
+            "peak_allocated_bytes": 702283264,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.6522801090031862,
+            "peak_allocated_bytes": 703102976,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.6523511912673712,
+            "peak_allocated_bytes": 703102976,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.652316739782691,
+            "peak_allocated_bytes": 703102976,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "a4361e4c5f3f23b5d8d8d9f9297a60b3add4d6a13010e0946f6b6be868ddd973",
+            "frames": 102400
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.6523466818034649,
+            "peak_allocated_bytes": 703102976,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "a4361e4c5f3f23b5d8d8d9f9297a60b3add4d6a13010e0946f6b6be868ddd973",
+            "frames": 102400
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.6523213982582092,
+            "peak_allocated_bytes": 703102976,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "a4361e4c5f3f23b5d8d8d9f9297a60b3add4d6a13010e0946f6b6be868ddd973",
+            "frames": 102400
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.6523452289402485,
+            "peak_allocated_bytes": 703102976,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "a4361e4c5f3f23b5d8d8d9f9297a60b3add4d6a13010e0946f6b6be868ddd973",
+            "frames": 102400
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.6522907968610525,
+            "peak_allocated_bytes": 703102976,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "a4361e4c5f3f23b5d8d8d9f9297a60b3add4d6a13010e0946f6b6be868ddd973",
+            "frames": 102400
+          }
+        ],
+        "fir": [
+          {
+            "kind": "warmup",
+            "seconds": 0.08817252144217491,
+            "peak_allocated_bytes": 703102976,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.08818423561751842,
+            "peak_allocated_bytes": 703102976,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.08818258717656136,
+            "peak_allocated_bytes": 703102976,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.08824391290545464,
+            "peak_allocated_bytes": 703102976,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "a4361e4c5f3f23b5d8d8d9f9297a60b3add4d6a13010e0946f6b6be868ddd973",
+            "frames": 102400
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.0881325714290142,
+            "peak_allocated_bytes": 703102976,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "a4361e4c5f3f23b5d8d8d9f9297a60b3add4d6a13010e0946f6b6be868ddd973",
+            "frames": 102400
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.0882112979888916,
+            "peak_allocated_bytes": 703102976,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "a4361e4c5f3f23b5d8d8d9f9297a60b3add4d6a13010e0946f6b6be868ddd973",
+            "frames": 102400
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.0882495678961277,
+            "peak_allocated_bytes": 703102976,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "a4361e4c5f3f23b5d8d8d9f9297a60b3add4d6a13010e0946f6b6be868ddd973",
+            "frames": 102400
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.08825585804879665,
+            "peak_allocated_bytes": 703102976,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "a4361e4c5f3f23b5d8d8d9f9297a60b3add4d6a13010e0946f6b6be868ddd973",
+            "frames": 102400
+          }
+        ],
+        "stage": [
+          {
+            "kind": "warmup",
+            "seconds": 1.0089129377156496,
+            "peak_allocated_bytes": 710394368,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 7
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.6370128653943539,
+            "peak_allocated_bytes": 710394368,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 7
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.6369987428188324,
+            "peak_allocated_bytes": 710394368,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 7
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.6370452996343374,
+            "peak_allocated_bytes": 710394368,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 7,
+            "waveform_sha256": "022d70a360cbda517aa4d6920b524ca8acf7367d00bfa7d53de74bbca084d9e2",
+            "frames": 102400
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.6370056755840778,
+            "peak_allocated_bytes": 710394368,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 7,
+            "waveform_sha256": "022d70a360cbda517aa4d6920b524ca8acf7367d00bfa7d53de74bbca084d9e2",
+            "frames": 102400
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.6370131727308035,
+            "peak_allocated_bytes": 710394368,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 7,
+            "waveform_sha256": "022d70a360cbda517aa4d6920b524ca8acf7367d00bfa7d53de74bbca084d9e2",
+            "frames": 102400
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.6370557062327862,
+            "peak_allocated_bytes": 710394368,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 7,
+            "waveform_sha256": "022d70a360cbda517aa4d6920b524ca8acf7367d00bfa7d53de74bbca084d9e2",
+            "frames": 102400
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.6369696725159883,
+            "peak_allocated_bytes": 710394368,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 7,
+            "waveform_sha256": "022d70a360cbda517aa4d6920b524ca8acf7367d00bfa7d53de74bbca084d9e2",
+            "frames": 102400
+          }
+        ],
+        "both": [
+          {
+            "kind": "warmup",
+            "seconds": 0.07322691008448601,
+            "peak_allocated_bytes": 710394368,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 7
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.07291345857083797,
+            "peak_allocated_bytes": 710394368,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 7
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.07313217967748642,
+            "peak_allocated_bytes": 710394368,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 7
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.07293093390762806,
+            "peak_allocated_bytes": 710394368,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 7,
+            "waveform_sha256": "022d70a360cbda517aa4d6920b524ca8acf7367d00bfa7d53de74bbca084d9e2",
+            "frames": 102400
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.07288945652544498,
+            "peak_allocated_bytes": 710394368,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 7,
+            "waveform_sha256": "022d70a360cbda517aa4d6920b524ca8acf7367d00bfa7d53de74bbca084d9e2",
+            "frames": 102400
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.07277600280940533,
+            "peak_allocated_bytes": 710394368,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 7,
+            "waveform_sha256": "022d70a360cbda517aa4d6920b524ca8acf7367d00bfa7d53de74bbca084d9e2",
+            "frames": 102400
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.07293367944657803,
+            "peak_allocated_bytes": 710394368,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 7,
+            "waveform_sha256": "022d70a360cbda517aa4d6920b524ca8acf7367d00bfa7d53de74bbca084d9e2",
+            "frames": 102400
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.07282927632331848,
+            "peak_allocated_bytes": 710394368,
+            "peak_reserved_bytes": 1279262720,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 7,
+            "waveform_sha256": "022d70a360cbda517aa4d6920b524ca8acf7367d00bfa7d53de74bbca084d9e2",
+            "frames": 102400
+          }
+        ]
+      },
+      "encode_only_sha256": "bc391e8f717d66a37035d5a993b1f69c01d9170a2c45aa544e1c83059ef8f462"
+    },
+    "long-stereo-32k.wav": {
+      "input_sha256": "310e41f7094fbc9058d4566edbf43161ec7d4eec2d35111816ebbdd8b208a184",
+      "input_sample_rate": 32000,
+      "input_shape": [
+        2,
+        392000
+      ],
+      "encode_shape": [
+        980,
+        32
+      ],
+      "encode_frames": 490,
+      "encode_sha256": [
+        "50acdae0bb7650e622ef7718440188b9dd9759c5449f997008b652a61d6dfbdd",
+        "50acdae0bb7650e622ef7718440188b9dd9759c5449f997008b652a61d6dfbdd"
+      ],
+      "output_sample_rate": 32000,
+      "fir_modules": 254,
+      "stage_modules": 7,
+      "decode": {
+        "off": [
+          {
+            "kind": "warmup",
+            "seconds": 2.4318078700453043,
+            "peak_allocated_bytes": 930812416,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 2.4317646492272615,
+            "peak_allocated_bytes": 933948928,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 2.432040961459279,
+            "peak_allocated_bytes": 933948928,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "measurement",
+            "seconds": 2.431467805057764,
+            "peak_allocated_bytes": 933948928,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "7c2224d84ed797e20ad990c4004dc0c86f7e31f73bb3b0a5c11fe072f91712f9",
+            "frames": 392000
+          },
+          {
+            "kind": "measurement",
+            "seconds": 2.431663289666176,
+            "peak_allocated_bytes": 933948928,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "7c2224d84ed797e20ad990c4004dc0c86f7e31f73bb3b0a5c11fe072f91712f9",
+            "frames": 392000
+          },
+          {
+            "kind": "measurement",
+            "seconds": 2.431780433282256,
+            "peak_allocated_bytes": 933948928,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "7c2224d84ed797e20ad990c4004dc0c86f7e31f73bb3b0a5c11fe072f91712f9",
+            "frames": 392000
+          },
+          {
+            "kind": "measurement",
+            "seconds": 2.432012926787138,
+            "peak_allocated_bytes": 933948928,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "7c2224d84ed797e20ad990c4004dc0c86f7e31f73bb3b0a5c11fe072f91712f9",
+            "frames": 392000
+          },
+          {
+            "kind": "measurement",
+            "seconds": 2.431557735428214,
+            "peak_allocated_bytes": 933948928,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "7c2224d84ed797e20ad990c4004dc0c86f7e31f73bb3b0a5c11fe072f91712f9",
+            "frames": 392000
+          }
+        ],
+        "fir": [
+          {
+            "kind": "warmup",
+            "seconds": 0.28294139727950096,
+            "peak_allocated_bytes": 934044672,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.28302191011607647,
+            "peak_allocated_bytes": 933948928,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.2829996570944786,
+            "peak_allocated_bytes": 933948928,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.2829245664179325,
+            "peak_allocated_bytes": 933948928,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "7c2224d84ed797e20ad990c4004dc0c86f7e31f73bb3b0a5c11fe072f91712f9",
+            "frames": 392000
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.2832619156688452,
+            "peak_allocated_bytes": 933948928,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "7c2224d84ed797e20ad990c4004dc0c86f7e31f73bb3b0a5c11fe072f91712f9",
+            "frames": 392000
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.2829837165772915,
+            "peak_allocated_bytes": 933948928,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "7c2224d84ed797e20ad990c4004dc0c86f7e31f73bb3b0a5c11fe072f91712f9",
+            "frames": 392000
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.2832330483943224,
+            "peak_allocated_bytes": 933948928,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "7c2224d84ed797e20ad990c4004dc0c86f7e31f73bb3b0a5c11fe072f91712f9",
+            "frames": 392000
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.2832974027842283,
+            "peak_allocated_bytes": 933948928,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 0,
+            "waveform_sha256": "7c2224d84ed797e20ad990c4004dc0c86f7e31f73bb3b0a5c11fe072f91712f9",
+            "frames": 392000
+          }
+        ],
+        "stage": [
+          {
+            "kind": "warmup",
+            "seconds": 2.3476860281080008,
+            "peak_allocated_bytes": 933959168,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 7
+          },
+          {
+            "kind": "warmup",
+            "seconds": 2.3477556128054857,
+            "peak_allocated_bytes": 933959168,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 7
+          },
+          {
+            "kind": "warmup",
+            "seconds": 2.3479433339089155,
+            "peak_allocated_bytes": 933959168,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 7
+          },
+          {
+            "kind": "measurement",
+            "seconds": 2.3477780241519213,
+            "peak_allocated_bytes": 933959168,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 7,
+            "waveform_sha256": "31b8b18ea1792c09d37362aae7da9ccb87b80ccfd848467b2c1fcc622498dfd9",
+            "frames": 392000
+          },
+          {
+            "kind": "measurement",
+            "seconds": 2.3477450627833605,
+            "peak_allocated_bytes": 933959168,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 7,
+            "waveform_sha256": "31b8b18ea1792c09d37362aae7da9ccb87b80ccfd848467b2c1fcc622498dfd9",
+            "frames": 392000
+          },
+          {
+            "kind": "measurement",
+            "seconds": 2.3477230202406645,
+            "peak_allocated_bytes": 933959168,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 7,
+            "waveform_sha256": "31b8b18ea1792c09d37362aae7da9ccb87b80ccfd848467b2c1fcc622498dfd9",
+            "frames": 392000
+          },
+          {
+            "kind": "measurement",
+            "seconds": 2.347722925245762,
+            "peak_allocated_bytes": 933959168,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 7,
+            "waveform_sha256": "31b8b18ea1792c09d37362aae7da9ccb87b80ccfd848467b2c1fcc622498dfd9",
+            "frames": 392000
+          },
+          {
+            "kind": "measurement",
+            "seconds": 2.347599320113659,
+            "peak_allocated_bytes": 933959168,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 0,
+            "fir_fallbacks": 0,
+            "stage_calls": 7,
+            "waveform_sha256": "31b8b18ea1792c09d37362aae7da9ccb87b80ccfd848467b2c1fcc622498dfd9",
+            "frames": 392000
+          }
+        ],
+        "both": [
+          {
+            "kind": "warmup",
+            "seconds": 0.19976782239973545,
+            "peak_allocated_bytes": 933959168,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 7
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.1995296236127615,
+            "peak_allocated_bytes": 933959168,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 7
+          },
+          {
+            "kind": "warmup",
+            "seconds": 0.20001709461212158,
+            "peak_allocated_bytes": 933959168,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 7
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.19961989298462868,
+            "peak_allocated_bytes": 933959168,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 7,
+            "waveform_sha256": "31b8b18ea1792c09d37362aae7da9ccb87b80ccfd848467b2c1fcc622498dfd9",
+            "frames": 392000
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.19983124546706676,
+            "peak_allocated_bytes": 933959168,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 7,
+            "waveform_sha256": "31b8b18ea1792c09d37362aae7da9ccb87b80ccfd848467b2c1fcc622498dfd9",
+            "frames": 392000
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.19961263984441757,
+            "peak_allocated_bytes": 933959168,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 7,
+            "waveform_sha256": "31b8b18ea1792c09d37362aae7da9ccb87b80ccfd848467b2c1fcc622498dfd9",
+            "frames": 392000
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.19977018237113953,
+            "peak_allocated_bytes": 933959168,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 7,
+            "waveform_sha256": "31b8b18ea1792c09d37362aae7da9ccb87b80ccfd848467b2c1fcc622498dfd9",
+            "frames": 392000
+          },
+          {
+            "kind": "measurement",
+            "seconds": 0.19955655187368393,
+            "peak_allocated_bytes": 933959168,
+            "peak_reserved_bytes": 2285895680,
+            "fir_calls": 254,
+            "fir_fallbacks": 0,
+            "stage_calls": 7,
+            "waveform_sha256": "31b8b18ea1792c09d37362aae7da9ccb87b80ccfd848467b2c1fcc622498dfd9",
+            "frames": 392000
+          }
+        ]
+      },
+      "encode_only_sha256": "50acdae0bb7650e622ef7718440188b9dd9759c5449f997008b652a61d6dfbdd"
+    }
+  }
+}
