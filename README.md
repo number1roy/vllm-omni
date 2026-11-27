@@ -21,9 +21,16 @@ Synthetic, reproducible artifacts for
 | `round2/<arm>/<input>/` | `encode-*.f32` latent dumps and `off|fir|stage|both.wav` |
 | `round2/<arm>/results.json` | Raw per-measurement records including counters |
 | `round2/resources-{before,after}.log` | NPU occupancy before and after the window |
+| `profiling/` | Native and opt-in decode profiles: per-module attribution, kernel tables, harness |
 | `logs/` | pytest, run, and comparison logs |
 | `acceptance.md` | Predeclared acceptance contract |
 | `compare.py`, `run_npu.sh`, `run_in_nightly.sh` | Verification harness |
+
+## Profiling
+
+`profiling/<arm>/profile.json` holds the module-group attribution (FIR / BigVGAN stage / other) and
+the kernel-type shares; `kernel_details.csv` is the raw profiler table. Both arms use the 12.25 s input
+and three timed repeats, so the two files are directly comparable.
 
 ## How to read the result
 

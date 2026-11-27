@@ -1,0 +1,265 @@
+{
+  "device": "Ascend910B4-1",
+  "optimized": false,
+  "latent_frames": 490,
+  "waveform": "/opt/tiger/liangbowen/benchmark/h3-pr10253-audio-opt-in-20261127/inputs/long-stereo-32k.wav",
+  "attribution": {
+    "total_ms": 2429.317,
+    "fir_ms": 2221.733,
+    "stage_ms": 95.612,
+    "other_ms": 111.972,
+    "fir_share": 0.9146,
+    "stage_share": 0.0394,
+    "other_share": 0.0461,
+    "fir_modules": 254,
+    "stage_modules": 7,
+    "runs_ms": [
+      2429.259,
+      2429.445,
+      2429.249
+    ]
+  },
+  "kernel_details_csv": "/opt/tiger/liangbowen/benchmark/h3-pr10253-audio-opt-in-20261127/profiling/native/profiler/g340-cd60-1100-8369-3c68-b324-7375_2833714_20261127163728766_ascend_pt/ASCEND_PROFILER_OUTPUT/kernel_details.csv",
+  "kernels_by_type": [
+    {
+      "type": "Conv2DTranspose",
+      "count": 241,
+      "total_ms": 4482.801,
+      "share": 0.9303,
+      "top_names": [
+        [
+          "Conv2DTranspose89",
+          2152.5933449999993
+        ],
+        [
+          "Conv2DTranspose78",
+          1067.92518
+        ],
+        [
+          "Conv2DTranspose67",
+          534.1031730000001
+        ]
+      ]
+    },
+    {
+      "type": "Conv2D",
+      "count": 461,
+      "total_ms": 82.117,
+      "share": 0.017,
+      "top_names": [
+        [
+          "Conv2D40",
+          13.446254
+        ],
+        [
+          "Conv2D59",
+          12.440967
+        ],
+        [
+          "Conv2D50",
+          9.421489
+        ]
+      ]
+    },
+    {
+      "type": "TransData",
+      "count": 2562,
+      "total_ms": 64.86,
+      "share": 0.0135,
+      "top_names": [
+        [
+          "trans_TransData_267",
+          2.165268
+        ],
+        [
+          "trans_TransData_234",
+          2.0859590000000003
+        ],
+        [
+          "trans_TransData_174",
+          2.0670420000000003
+        ]
+      ]
+    },
+    {
+      "type": "Sin",
+      "count": 229,
+      "total_ms": 46.963,
+      "share": 0.0097,
+      "top_names": [
+        [
+          "aclnnSin_SinAiCore_Sin",
+          46.963238999999994
+        ]
+      ]
+    },
+    {
+      "type": "Mul",
+      "count": 930,
+      "total_ms": 36.696,
+      "share": 0.0076,
+      "top_names": [
+        [
+          "aclnnMul_MulAiCore_Mul",
+          26.033030999999998
+        ],
+        [
+          "aclnnMuls_MulAiCore_Mul",
+          10.662626999999995
+        ]
+      ]
+    },
+    {
+      "type": "Slice",
+      "count": 458,
+      "total_ms": 35.778,
+      "share": 0.0074,
+      "top_names": [
+        [
+          "aclnnAdd_SliceAiCore_Slice",
+          23.404514999999986
+        ],
+        [
+          "aclnnMul_SliceAiCore_Slice",
+          12.373231000000008
+        ]
+      ]
+    },
+    {
+      "type": "Add",
+      "count": 599,
+      "total_ms": 32.749,
+      "share": 0.0068,
+      "top_names": [
+        [
+          "aclnnAdd_AddAiCore_Add",
+          32.460117
+        ],
+        [
+          "aclnnAdds_AddAiCore_Add",
+          0.2888629999999999
+        ]
+      ]
+    },
+    {
+      "type": "PadV3",
+      "count": 458,
+      "total_ms": 18.149,
+      "share": 0.0038,
+      "top_names": [
+        [
+          "aclnnReplicationPad1d_PadV3AiCore_PadV3",
+          18.14908800000001
+        ]
+      ]
+    },
+    {
+      "type": "Pows",
+      "count": 229,
+      "total_ms": 8.073,
+      "share": 0.0017,
+      "top_names": [
+        [
+          "aclnnPowTensorScalar_PowsAiCore_Pows",
+          8.073417
+        ]
+      ]
+    },
+    {
+      "type": "MemSet",
+      "count": 458,
+      "total_ms": 4.135,
+      "share": 0.0009,
+      "top_names": [
+        [
+          "trans_TransData_268_MemSet",
+          0.35212799999999994
+        ],
+        [
+          "trans_TransData_265_MemSet",
+          0.335928
+        ],
+        [
+          "trans_TransData_172_MemSet",
+          0.3348459999999999
+        ]
+      ]
+    },
+    {
+      "type": "LpNormV2",
+      "count": 242,
+      "total_ms": 2.783,
+      "share": 0.0006,
+      "top_names": [
+        [
+          "aclnnNorm_LpNormV2_LpNormV2",
+          2.7827279999999983
+        ]
+      ]
+    },
+    {
+      "type": "BroadcastTo",
+      "count": 458,
+      "total_ms": 2.338,
+      "share": 0.0005,
+      "top_names": [
+        [
+          "aclnnInplaceCopy_BroadcastToAiCore_BroadcastTo",
+          2.3384889999999983
+        ]
+      ]
+    },
+    {
+      "type": "RealDiv",
+      "count": 255,
+      "total_ms": 0.569,
+      "share": 0.0001,
+      "top_names": [
+        [
+          "aclnnDiv_RealDivAiCore_RealDiv",
+          0.3141040000000001
+        ],
+        [
+          "aclnnDivs_RealDivAiCore_RealDiv",
+          0.25512599999999996
+        ]
+      ]
+    },
+    {
+      "type": "Exp",
+      "count": 458,
+      "total_ms": 0.515,
+      "share": 0.0001,
+      "top_names": [
+        [
+          "aclnnExp_ExpAiCore_Exp",
+          0.5149519999999995
+        ]
+      ]
+    },
+    {
+      "type": "Reciprocal",
+      "count": 229,
+      "total_ms": 0.257,
+      "share": 0.0001,
+      "top_names": [
+        [
+          "aclnnReciprocal_ReciprocalAiCore_Reciprocal",
+          0.25658500000000006
+        ]
+      ]
+    },
+    {
+      "type": "ClipByValueV2",
+      "count": 2,
+      "total_ms": 0.041,
+      "share": 0.0,
+      "top_names": [
+        [
+          "aclnnClamp_ClipByValueV2AiCore_ClipByValueV2",
+          0.041261
+        ]
+      ]
+    }
+  ]
+}

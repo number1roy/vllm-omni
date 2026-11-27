@@ -1,0 +1,257 @@
+{
+  "device": "Ascend910B4-1",
+  "optimized": true,
+  "latent_frames": 490,
+  "waveform": "/opt/tiger/liangbowen/benchmark/h3-pr10253-audio-opt-in-20261127/inputs/long-stereo-32k.wav",
+  "attribution": {
+    "total_ms": 197.177,
+    "fir_ms": 75.574,
+    "stage_ms": 10.581,
+    "other_ms": 111.022,
+    "fir_share": 0.3833,
+    "stage_share": 0.0537,
+    "other_share": 0.5631,
+    "fir_modules": 254,
+    "stage_modules": 7,
+    "runs_ms": [
+      197.287,
+      197.135,
+      197.109
+    ]
+  },
+  "kernel_details_csv": "/opt/tiger/liangbowen/benchmark/h3-pr10253-audio-opt-in-20261127/profiling/optin/profiler/g340-cd60-1100-8369-3c68-b324-7375_2849555_20261127163903126_ascend_pt/ASCEND_PROFILER_OUTPUT/kernel_details.csv",
+  "kernels_by_type": [
+    {
+      "type": "Conv2D",
+      "count": 697,
+      "total_ms": 85.14,
+      "share": 0.2412,
+      "top_names": [
+        [
+          "Conv2D31",
+          31.790675999999998
+        ],
+        [
+          "Conv2D30",
+          18.281945999999994
+        ],
+        [
+          "Conv2D43",
+          5.887676000000001
+        ]
+      ]
+    },
+    {
+      "type": "TransData",
+      "count": 2092,
+      "total_ms": 51.462,
+      "share": 0.1458,
+      "top_names": [
+        [
+          "trans_TransData_90",
+          12.038699999999995
+        ],
+        [
+          "trans_TransData_89",
+          10.330861999999996
+        ],
+        [
+          "trans_TransData_92",
+          5.9551370000000015
+        ]
+      ]
+    },
+    {
+      "type": "Sin",
+      "count": 228,
+      "total_ms": 46.948,
+      "share": 0.133,
+      "top_names": [
+        [
+          "aclnnSin_SinAiCore_Sin",
+          46.948253
+        ]
+      ]
+    },
+    {
+      "type": "Mul",
+      "count": 926,
+      "total_ms": 37.035,
+      "share": 0.1049,
+      "top_names": [
+        [
+          "aclnnMul_MulAiCore_Mul",
+          25.653939999999995
+        ],
+        [
+          "aclnnMuls_MulAiCore_Mul",
+          11.380833000000003
+        ]
+      ]
+    },
+    {
+      "type": "Slice",
+      "count": 468,
+      "total_ms": 36.527,
+      "share": 0.1035,
+      "top_names": [
+        [
+          "aclnnAdd_SliceAiCore_Slice",
+          24.516650000000002
+        ],
+        [
+          "aclnnMul_SliceAiCore_Slice",
+          12.010706
+        ]
+      ]
+    },
+    {
+      "type": "Add",
+      "count": 608,
+      "total_ms": 32.576,
+      "share": 0.0923,
+      "top_names": [
+        [
+          "aclnnAdd_AddAiCore_Add",
+          32.29186099999998
+        ],
+        [
+          "aclnnAdds_AddAiCore_Add",
+          0.2838649999999999
+        ]
+      ]
+    },
+    {
+      "type": "Transpose",
+      "count": 252,
+      "total_ms": 25.296,
+      "share": 0.0717,
+      "top_names": [
+        [
+          "aclnnInplaceCopy_TransposeAiCore_Transpose",
+          24.363429999999983
+        ],
+        [
+          "aclnnFlip_TransposeAiCore_Transpose",
+          0.9323200000000001
+        ]
+      ]
+    },
+    {
+      "type": "PadV3",
+      "count": 457,
+      "total_ms": 18.48,
+      "share": 0.0523,
+      "top_names": [
+        [
+          "aclnnReplicationPad1d_PadV3AiCore_PadV3",
+          18.402289000000007
+        ],
+        [
+          "aclnnConstantPadNd_PadV3AiCore_PadV3",
+          0.077541
+        ]
+      ]
+    },
+    {
+      "type": "Pows",
+      "count": 228,
+      "total_ms": 8.201,
+      "share": 0.0232,
+      "top_names": [
+        [
+          "aclnnPowTensorScalar_PowsAiCore_Pows",
+          8.201072000000002
+        ]
+      ]
+    },
+    {
+      "type": "ReverseV2",
+      "count": 12,
+      "total_ms": 7.195,
+      "share": 0.0204,
+      "top_names": [
+        [
+          "aclnnFlip_ReverseV2Aicore_ReverseV2",
+          7.195464999999999
+        ]
+      ]
+    },
+    {
+      "type": "LpNormV2",
+      "count": 241,
+      "total_ms": 2.767,
+      "share": 0.0078,
+      "top_names": [
+        [
+          "aclnnNorm_LpNormV2_LpNormV2",
+          2.766618999999999
+        ]
+      ]
+    },
+    {
+      "type": "RealDiv",
+      "count": 254,
+      "total_ms": 0.552,
+      "share": 0.0016,
+      "top_names": [
+        [
+          "aclnnDiv_RealDivAiCore_RealDiv",
+          0.3115020000000001
+        ],
+        [
+          "aclnnDivs_RealDivAiCore_RealDiv",
+          0.24068799999999996
+        ]
+      ]
+    },
+    {
+      "type": "Exp",
+      "count": 456,
+      "total_ms": 0.513,
+      "share": 0.0015,
+      "top_names": [
+        [
+          "aclnnExp_ExpAiCore_Exp",
+          0.5126510000000009
+        ]
+      ]
+    },
+    {
+      "type": "Reciprocal",
+      "count": 228,
+      "total_ms": 0.259,
+      "share": 0.0007,
+      "top_names": [
+        [
+          "aclnnReciprocal_ReciprocalAiCore_Reciprocal",
+          0.25870499999999996
+        ]
+      ]
+    },
+    {
+      "type": "ClipByValueV2",
+      "count": 2,
+      "total_ms": 0.045,
+      "share": 0.0001,
+      "top_names": [
+        [
+          "aclnnClamp_ClipByValueV2AiCore_ClipByValueV2",
+          0.044521000000000005
+        ]
+      ]
+    },
+    {
+      "type": "MemSet",
+      "count": 2,
+      "total_ms": 0.018,
+      "share": 0.0001,
+      "top_names": [
+        [
+          "aclnnConstantPadNd_PadV3AiCore_MemSet",
+          0.01804
+        ]
+      ]
+    }
+  ]
+}
